@@ -1,15 +1,13 @@
 # humanstxt.org/
 # The humans responsible & technology colophon
-
+ 
 # TEAM
-
-    <name> -- <role> -- <twitter>
-
+    Lex Ismailov -- Developer -- @Lex-i
+ 
 # THANKS
-
-    <name>
-
+    Thanks to Marina Mele -- Developer -- @marina_mele, who made the     TaskBuster Django Tutorial
+ 
 # TECHNOLOGY COLOPHON
-
-    HTML5, CSS3
-    jQuery, Modernizr
+    Django
+    HTML5 Boilerplate
+    Twitter Bootstrap
