@@ -21,6 +21,7 @@ LANGUAGES = (
     ('ru', _('Russian')),
 )
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+# +The next line points to the folder containing the folder that contains the actual file, i.e. the folder taskbuster
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -37,7 +38,9 @@ def get_env_variable(var_name):
         raise ImproperlyConfigured(error_msg)
 
 
+# +the SECRET_KEY added to the postactivate file in the virtual environment
 SECRET_KEY = get_env_variable('SECRET_KEY')
+# +When deploying your app, you will have to specify the SECRET_KEY  in your server
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
@@ -68,22 +71,6 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'taskbuster.urls'
-
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
-        },
-    },
-]
 
 WSGI_APPLICATION = 'taskbuster.wsgi.application'
 
@@ -123,13 +110,13 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'Europe/Moscow'  # define a default time zone
+TIME_ZONE = 'Europe/Moscow'  # +define a default time zone
 
-USE_I18N = True
+USE_I18N = True     # + load the Django internationalization machinery
 
-USE_L10N = True     # enable Localization
+USE_L10N = True     # + enable Localization
 
-USE_TZ = True   # enable the time zone support
+USE_TZ = True   # +enable the time zone support
 
 
 LOCALE_PATHS = (
@@ -139,7 +126,9 @@ LOCALE_PATHS = (
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
+# +The next line tells Django to look for static files in a folder named static inside each of our apps.
 STATIC_URL = '/static/'
+# +The next line tell Django to look for static files in the taskbuster/static directory
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static"),
 )
@@ -148,7 +137,7 @@ STATICFILES_DIRS = (
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, "templates")],
+        'DIRS': [os.path.join(BASE_DIR, "templates")],  # +It tells Django where are templates
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -156,15 +145,15 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'django.template.context_processors.i18n',
+                'django.template.context_processors.i18n',  # + load the Django internationalization processor
             ],
         },
     },
 ]
 
-# enable time zone support, all the datetime instances will be aware
+# +enable time zone support, all the datetime instances will be aware
 now_naive = datetime.datetime.now()
 
-# if you have time zone support enabled, i.e. USE_TZ=True,
-# there is a shortcut to obtain the current aware time
+# +if you have time zone support enabled, i.e. USE_TZ=True,
+# +there is a shortcut to obtain the current aware time
 now_aware = now()

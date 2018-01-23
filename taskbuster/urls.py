@@ -14,11 +14,13 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, re_path, include
+from django.urls import re_path  # , path, include
 from django.conf.urls.i18n import i18n_patterns
 from .views import home, home_files
+# + Note that we are using a relative import to import the home view.
+# + This way, we can change the name of our project or app without breaking the urls.
 
-
+# + It makes robots.txt & humans.txt available for search engines at those urls
 urlpatterns = [
     re_path(r'^(?P<filename>(robots.txt)|(humans.txt))$',
             home_files, name='home-files'),
