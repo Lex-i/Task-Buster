@@ -1,0 +1,44 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-01-14 19:55+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: taskbuster/settings/base.py:17
+msgid "English"
+msgstr ""
+
+#: taskbuster/settings/base.py:18
+msgid "Catalan"
+msgstr ""
+
+#: taskbuster/settings/base.py:19
+msgid "Russian"
+msgstr ""
+
+#: taskbuster/templates/taskbuster/index.html:9
+msgid "Welcome to TaskBuster!"
+msgstr "Добро пожаловать в TaskBuster!"
+
+#: taskbuster/templates/taskbuster/index.html:10
+msgid ""
+"TaskBuster is a simple Task manager that helps you organize your daylife. </"
+"br> You can create todo lists, periodic tasks and more! </br></br> If you "
+"want to learn how it was created, or create it yourself!, check www.django-"
+"tutorial.com"
+msgstr "TaskBuster - это простой менеджер задач (планировщик), который помогает организовать вашу деятельность. </br> Вы можете создавать списки " "задач, повторяющиеся задачи и многое другое! </br></br> Если Вы хотите " "узнать как он был создан, или  создать его самостоятельно, зайдите на "
+"<a href='http://www.marinamele.com/taskbuster-django-tutorial' target=_'blank'>Taskbuster Django Tutorial</a>."

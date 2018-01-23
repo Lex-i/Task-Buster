@@ -5,7 +5,7 @@ from django.utils.timezone import now
 
 
 def home(request):
-    today = datetime.date.today()
+    today = datetime.date.today()  # pass the today variable in the home view
     return render(request, "taskbuster/index.html", {'today': today, 'now': now()})
 
 

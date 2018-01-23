@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% load l10n %}
+{% load l10n %} {# the localization template tags #}
 {% load tz %}
 {% block head_title %}TaskBuster{% endblock %}
 
@@ -29,7 +29,7 @@
         </div>
         <div class="col-md-4">
             <h2>Time Zones</h2>
-            <p> Barcelona: <span id="time-tz">{{now|time:"H:i"}}</span></p>
+            <p> Moscow: <span id="time-tz">{{now|time:"H:i"}}</span></p>
             <p> UTC: <span id="time-utc">{{now|utc|time:"H:i"}}</span></p>
             <p> New York: <span id="time-ny"> 
                    {{now|timezone:"America/New_York"|time:"H:i"}}</span></p>

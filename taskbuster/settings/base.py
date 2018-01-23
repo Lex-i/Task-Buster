@@ -23,14 +23,11 @@ LANGUAGES = (
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-now_naive = datetime.datetime.now()
-now_aware = now()
-TIME_ZONE = 'Europe/Moscow'
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-
 
 def get_env_variable(var_name):
     try:
@@ -126,13 +123,14 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'  # define a default time zone
 
 USE_I18N = True
 
-USE_L10N = True
+USE_L10N = True     # enable Localization
 
-USE_TZ = True
+USE_TZ = True   # enable the time zone support
+
 
 LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale'),
@@ -163,3 +161,10 @@ TEMPLATES = [
         },
     },
 ]
+
+# enable time zone support, all the datetime instances will be aware
+now_naive = datetime.datetime.now()
+
+# if you have time zone support enabled, i.e. USE_TZ=True,
+# there is a shortcut to obtain the current aware time
+now_aware = now()

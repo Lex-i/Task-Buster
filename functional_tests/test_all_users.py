@@ -38,12 +38,14 @@ class HomeNewVisitorTest(StaticLiveServerTestCase):
 
     def test_internationalization(self):
         for lang, h1_text in [('en', 'Welcome to TaskBuster!'),
-                              ('ca', 'Benvingut a TaskBuster!')]:
+                              ('ca', 'Benvingut a TaskBuster!'),
+                              ('ru', 'Добро пожаловать в TaskBuster!')]:
             activate(lang)
             self.browser.get(self.get_full_url("home"))
             h1 = self.browser.find_element_by_tag_name("h1")
             self.assertEqual(h1.text, h1_text)
 
+# In the Home Page, we will show today’s date and time using both local and non-local formats
     def test_localization(self):
         today = date.today()
         for lang in ['en', 'ca']:
@@ -55,6 +57,7 @@ class HomeNewVisitorTest(StaticLiveServerTestCase):
                              local_date.text)
             self.assertEqual(today.strftime('%Y-%m-%d'), non_local_date.text)
 
+# display the current time here in Moscow (using the default time zone), the UTC time, and the time in New York
     def test_time_zone(self):
         self.browser.get(self.get_full_url("home"))
         tz = self.browser.find_element_by_id("time-tz").text
