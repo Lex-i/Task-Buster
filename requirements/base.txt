@@ -5,3 +5,5 @@ celery==4.1.0
 kombu==4.1.0
 pytz==2017.3
 vine==1.1.4
+psycopg2==2.7.3.2
+django-allauth==0.34.0

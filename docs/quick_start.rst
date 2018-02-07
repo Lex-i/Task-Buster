@@ -176,3 +176,15 @@ A list of all the commands used to run this template::
  
     $ python manage.py makemessages -l ru
     $ python manage.py compilemessages -l ru
+
+
+Create new role name as the linux username
+----------------------------------------------
+
+Login as default user: sudo -i -u postgres
+Create new User: createuser --interactive
+When prompted for role name, enter linux username, and select Yes to superuser question.
+Still logged in as postgres user, create a database: createdb <username_from_step_3>
+Confirm error(s) are gone by entering: psql at the command prompt.
+Output should show psql (x.x.x) Type "help" for help.
+

@@ -51,6 +51,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    # The Django sites framework is required
+    'django.contrib.sites',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -146,10 +148,50 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.i18n',  # + load the Django internationalization processor
+                # 'django.core.context_processors.request',   # Required by allauth template tags
             ],
         },
     },
 ]
+# +Authentication Backend used by allauth
+AUTHENTICATION_BACKENDS = (
+    # Default backend -- used to login by username in Django admin
+    "django.contrib.auth.backends.ModelBackend",
+    # `allauth` specific authentication methods, such as login by e-mail
+    "allauth.account.auth_backends.AuthenticationBackend",
+)
+
+INSTALLED_APPS += (
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    # Login via Google
+    'allauth.socialaccount.providers.google',
+)
+
+"""
+go to the admin interface at http://127.0.0.1:8000/admin/sites/site
+and create a Site for the localhost, 127.0.0.1:8000,
+or your website domain for production. If you have an example.com
+site defined, modify it so it has an id equal to the SITE_ID=1
+setting variable. Otherwise, if you create a new site,
+you have to change the settings variable, SITE_ID,
+with the ID of the site you just created (probably 2).
+"""
+
+SITE_ID = 1
+
+"""
+This will make allauth to ask for the email (if possible)
+in the authorization process. It will ask it to Google,
+without any verification process, and after logging in,
+it will redirect the user to the home page.
+"""
+
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_EMAIL_VERIFICATION = "none"
+SOCIALACCOUNT_QUERY_EMAIL = True
+LOGIN_REDIRECT_URL = "/"
 
 # +enable time zone support, all the datetime instances will be aware
 now_naive = datetime.datetime.now()

@@ -14,7 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import re_path  # , path, include
+from django.urls import re_path, include  # , path
 from django.conf.urls.i18n import i18n_patterns
 from .views import home, home_files
 # + Note that we are using a relative import to import the home view.
@@ -24,6 +24,7 @@ from .views import home, home_files
 urlpatterns = [
     re_path(r'^(?P<filename>(robots.txt)|(humans.txt))$',
             home_files, name='home-files'),
+    re_path(r'^accounts/', include('allauth.urls')),
 ]
 
 urlpatterns += i18n_patterns(
