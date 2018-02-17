@@ -59,6 +59,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # TaskBuster apps
+    'taskbuster.apps.taskmanager',
 ]
 
 MIDDLEWARE = [
