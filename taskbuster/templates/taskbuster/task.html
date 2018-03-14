@@ -1,0 +1,10 @@
+{% load taskbuster_extras %}<b>{{t.name}}</b><br /><br />
+{% if t.description %}{{t.description|sanitize}}{% endif %}<br /><br />
+
+Project: {{t.project.name }}<br />
+Project Manager: {{ t.project.user|username }}<br />
+Date of creation: {{t.created_date|date:"d.m.Y"}}<br />
+Resources: {{ t.resources.employee.user|username|default:"не назначен" }}<br />
+{% if t.due_date %}Due date: {{ t.due_date|date:"d.m.Y" }}<br />{% else %}<br />{% endif %}
+
+<a href="http://{{host}}{% url task_details t.id %}">http://{{host}}{% url task_details t.id %}</a>
