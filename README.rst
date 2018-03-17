@@ -28,20 +28,3 @@ TaskBuster has been done, and even do it yourself if you want to!!
     <a href="http://marinamele.com/taskbuster-django-tutorial" 
     target="_blank">TaskBuster Django Tutorial</a>
  
-To start using the project, check out the :doc:`requirements` 
-and next the :doc:`quick_start`.
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
- 
-   requirements
-   quick_start
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
