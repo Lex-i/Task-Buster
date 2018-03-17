@@ -6,11 +6,9 @@
 Welcome to TaskBuster's documentation!
 ======================================
 
-This is an awesome **Django Project Boilerplate**!!
- 
-With this code you can start a *complex* Django Project 
-very quickly, with just a few steps!
- 
+This is my first project which is based on an awesome **Django Project Boilerplate**!!
+
+
 Some of the TaskBuster Django Project Boilerplate functionalities are:
  
 - **different virtual environments** for developing, testing and production
@@ -30,7 +28,7 @@ TaskBuster has been done, and even do it yourself if you want to!!
     <a href="http://marinamele.com/taskbuster-django-tutorial" 
     target="_blank">TaskBuster Django Tutorial</a>
  
-To start using the Boilerplate, check out the :doc:`requirements` 
+To start using the project, check out the :doc:`requirements` 
 and next the :doc:`quick_start`.
 
 .. toctree::
