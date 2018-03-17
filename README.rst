@@ -42,6 +42,6 @@ and next the :doc:`quick_start`.
 Indices and tables
 ==================
 
-* :ref:'genindex'
-* :ref:'modindex'
-* :ref:'search'
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
