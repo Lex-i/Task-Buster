@@ -28,6 +28,11 @@ class CommentsInLine(admin.TabularInline):
     extra = 0
 
 
+class ProjectTeamInLine(admin.TabularInline):
+    model = models.ProjectTeam
+    extra = 0
+
+
 @admin.register(models.Employee)
 class EmployeeAdmin(admin.ModelAdmin):
 
@@ -93,14 +98,14 @@ class ProjectsAdmin(admin.ModelAdmin):
     search_fields = ["name"]
 
     inlines = [
-        TasksInLine, CommentsInLine
+        ProjectTeamInLine, TasksInLine, CommentsInLine
     ]
 
     def _supervisor(self, obj):
         return obj.user.name
 
     def _tasks(self, obj):
-        return obj.tasks.all().count()
+        return obj.related_tasks.all().count()
 
     def _comments(self, obj):
-        return obj.comments.all().count()
+        return obj.related_comments.all().count()

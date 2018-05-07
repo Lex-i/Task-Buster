@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load l10n %} {# the localization template tags #}
+{% load tz %}
+{% block head_title %}Project: {{project}}{% endblock %}
+{% block title %}{{project}}{% endblock %}
+
+{% block left %}
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+      <!-- Example row of columns -->
+      <div class="row">
+        <div class="col-md-4">        
+            <b>{% trans "Project Manager" %}</b><br />
+            <span>{{project.user.name}}</span>
+        </div>
+        <div class="col-md-4">
+            <b>{% trans "Soft deadline"%}</b><br />
+            <span id="local-date">{{project.softdeadline}}</span>
+        </div>
+        <div class="col-md-4">
+            <b>{% trans "Hard deadline"%}</b><br />
+            <span id="local-date">{{project.harddeadline}}</span>
+        </div>
+      </div>
+    </div>
+    
+    <div id="task-container" style="padding-bottom:0">
+        <h2 id="task-title">{{project.name}}</h2>
+        {% if project.description %}
+            <div id="task-info">
+                {{project.description}}
+            </div>
+            <div style="color:#000; padding: 5px 0">
+                <b>{% trans "Project team" %}</b> 
+                
+                    {% for member in project.users.all %}
+                        <p>{{member.pk}}</p>                        
+                        {% endfor %}
+                        
+                
+            </div>
+            {% endif %}
+
+        <div id="task-action">
+            <a href="{% url 'tasks_list' %}?project_id={{project.id}}&folder=all" class="bigger">
+                <i>{% trans "Project tasks"%}</i>
+            </a>
+            ({{project.tasks_count}}
+            {%if project.tasks_active_count%}
+                , 
+                <b>{{project.tasks_active_count}}</b>
+                {% endif %})
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="{% url 'projects_list' %}" class="bigger">
+                {% trans "Back to the project list"%}
+            </a>
+        </div>
+    </div>
+
+{% endblock %}

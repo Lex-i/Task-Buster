@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load l10n %} {# the localization template tags #}
+{% load tz %}
+{% block head_title %}Projects{% endblock %}
+
+{% block left %}
+{% endblock %}
+
+{% block content %}
+
+    <h1 style="display: inline; padding-right: 15px">{% trans "Projects"%}</h1>
+    {% if user.is_superuser %}
+        <p><a class="btn btn-default" href="{% url 'add_project' %}" role="button" class="do">{% trans "Add project"%}</a></p>        
+        {% endif %}
+    <br /><br />
+
+    {% if projects %}
+        {% for p in projects %}
+            <a href="{% url 'project_details' p.id %}" style="font-size:130%; line-height: 175%">
+                {{p.name}}
+            </a>            
+            <br />
+            {% endfor %}
+        {% else %}
+            {% trans "There are no projects"%}
+            <br />
+            {% blocktrans %}
+                Ask for somebody to add you to any project.
+            {% endblocktrans %}
+        {% endif %}
+
+{% endblock %}

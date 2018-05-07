@@ -1,0 +1,45 @@
+[
+    {
+        "pk": 1, 
+        "model": "taskbuster.project", 
+        "fields": {
+            "title": "Project 1",
+	    "user": 1,
+	    "users": [1]
+        }
+    },
+    {
+        "pk": 2, 
+        "model": "taskbuster.project", 
+        "fields": {
+            "title": "Project 2",
+	    "user": 1,
+	    "users": [1]
+        }
+    },
+    {
+        "pk": 1, 
+        "model": "taskbuster.task", 
+        "fields": {
+            "completed": False, 
+            "description": "", 
+            "name": "Task 1", 
+            "created_at": "2018-04-18 01:24:27", 
+            "owner": 1, 
+            "project": 1, 
+            "due_date": null, 
+            "assigned_to": 1, 
+            "parenttask": 0
+        }
+    },
+    {
+        "pk": 1, 
+        "model": "taskbuster.comment", 
+        "fields": {
+            "project": 1, 
+            "author": 1, 
+            "message": "Test comment 1",
+            "created_at": "2018-04-18 01:24:27"
+        }
+    }
+]

@@ -1,13 +1,21 @@
 # -*- coding: utf-8 -*-
 from datetime import date
 from django.db import models
+from django.db.models import Q
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from django.dispatch import receiver
 from django.db.models.signals import post_save
-from django.core.validators import RegexValidator
+# from django.core.validators import RegexValidator
 
 from . import managers
+
+
+# users in project
+def users_in_projects(projects):
+    users = Employee.objects.filter(
+        Q(project_team__in=projects) | Q(is_superuser=True)).distinct().order_by('name')
+    return users
 
 
 # Read about Models: https://docs.djangoproject.com/en/2.0/topics/db/models/
@@ -30,15 +38,16 @@ class Employee(models.Model):
         models.SET_NULL,
         blank=True,
         null=True,
-        related_name='supervisor_of_user',
+        verbose_name=_("Supervisor"),
+        related_name='subordinate_employees',
     )
     department = models.ForeignKey(
-        # The supervisor is a relative user who is a supervisor of the current one
         'Department',
         models.SET_NULL,
         blank=True,
         null=True,
-        related_name='Department',
+        verbose_name=_("Department"),
+        related_name='department_staff',
     )
     # Attributes - Mandatory
     name = models.CharField(
@@ -48,19 +57,18 @@ class Employee(models.Model):
     )
     int_phone = models.PositiveIntegerField(
         default=100,
+        verbose_name=_("Internal phone"),
         help_text=_("Enter the internal phone number")
     )
     ext_phone = models.CharField(
         max_length=12,
+        verbose_name=_("External phone"),
         help_text=_("Enter the external (mobile) phone number")
     )
     job_title = models.CharField(
         max_length=100,
+        verbose_name=_("Job title"),
         help_text=_("Enter the employee's job title")
-    )
-    interaction = models.PositiveIntegerField(
-        default=0,
-        verbose_name=_("interaction")
     )
     # Attributes - Optional
     # The Object Manager is used to make queries
@@ -109,7 +117,8 @@ class Department(models.Model):
         models.SET_NULL,
         blank=True,
         null=True,
-        related_name='supervisor_of_department',
+        related_name='supervised_department',
+        verbose_name=_("Supervisor"),
     )
     # Attributes - Optional
     # number = models.PositiveIntegerField(
@@ -142,21 +151,18 @@ class Project(models.Model):
         related_name="projects",
         verbose_name=_("Project Manager")
     )
+    users = models.ManyToManyField(
+        Employee,
+        through='ProjectTeam',
+        through_fields=('project', 'employee'),
+    )
     # Attributes - Mandatory
     name = models.CharField(
         max_length=120,
-        verbose_name=_("name"),
+        verbose_name=_("Project Title"),
         help_text=_("Enter the project name")
     )
     # Attributes - Optional
-    color = models.CharField(
-        max_length=7,
-        default="#fff",
-        validators=[RegexValidator(
-            "(^#[0-9a-fA-F]{3}$)|(^#[0-9a-fA-F]{6}$)")],
-        verbose_name=_("color"),
-        help_text=_("Enter the hex color code, like #ccc or #cccccc")
-    )
     description = models.TextField(
         verbose_name=_("Description"),
         # models.SET_NULL,
@@ -181,10 +187,50 @@ class Project(models.Model):
     )
     # Object Manager
     objects = managers.ProjectManager()
-    # Custom Properties
+
     # Methods
+    def __unicode__(self):
+        return self.title
+
+    def _get_tasks_count(self):
+        return self.related_tasks.count()
+
+    def _get_active_tasks_count(self):
+        return self.related_tasks.exclude(completed=True).count()
+
+    def _get_progress_statement(self):
+        T = self.related_tasks.count()
+        A = self.related_tasks.exclude(completed=True).count()
+        return ((T - A) / T)
+
+    # Add project manager into project team when project is created
+
+    def save(self):
+        is_new = self._get_pk_val() is None
+        super(Project, self).save()
+        if is_new:
+            self.users.add(self.user)
+    # Project is availiable for user
+
+    def is_avail(self, employee):
+        if employee.user.is_superuser:
+            return True
+        try:
+            employee.avail_projects.get(pk=self.pk)
+            return True
+        except Project.DoesNotExist:
+            return False
+
+    # User that has access to the project
+    def allowed_users(self):
+        pass
+    # Custom Properties
+    tasks_count = property(_get_tasks_count)
+    active_tasks_count = property(_get_active_tasks_count)
+    progress_statement = property(_get_progress_statement)
 
     # Meta and String
+
     class Meta:
         verbose_name = _("Project")
         verbose_name_plural = _("Projects")
@@ -202,24 +248,32 @@ class Comment(models.Model):
         models.SET_NULL,
         blank=True,
         null=True,
-        related_name="comments",
-        verbose_name=_("project")
+        related_name="related_comments",
+        verbose_name=_("Project")
     )
-    user = models.ForeignKey(
+    author = models.ForeignKey(
         Employee,
         models.SET_NULL,
         blank=True,
         null=True,
-        related_name="employee",
-        verbose_name=_("employee")
+        related_name="written_comments",
+        verbose_name=_("Author")
+    )
+    reply_to = models.ForeignKey(
+        'self',
+        models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='replies',
+        verbose_name=_("In reply to")
     )
     # Attributes - Mandatory
     text = models.TextField(
-        verbose_name=_("Description"),
         # models.SET_NULL,
         blank=True,
         null=True,
-        help_text=_("Enter description")
+        help_text=_("Enter description"),
+        verbose_name=_("Description"),
     )
     datetime = models.DateTimeField(
         verbose_name=_("Date & time"),
@@ -234,11 +288,10 @@ class Comment(models.Model):
     class Meta:
         verbose_name = _("Comment")
         verbose_name_plural = _("Comments")
-        ordering = ("project", "user")
-        unique_together = ("project", "user")
+        ordering = ("datetime", )
 
     def __str__(self):
-        return "%s - %s" % (self.project, self.user)
+        return "%s - %s" % (self.author, self.datetime)
 
 
 class Tag(models.Model):
@@ -254,7 +307,7 @@ class Tag(models.Model):
     # Attributes - Mandatory
     name = models.CharField(
         max_length=100,
-        verbose_name=_("Name")
+        verbose_name=_("Tag Name")
     )
     # Attributes - Optional
     # Object Manager
@@ -280,7 +333,7 @@ class Task(models.Model):
         models.SET_NULL,
         blank=True,
         null=True,
-        related_name="tasks",
+        related_name="related_tasks",
         verbose_name=_("project")
     )
     parenttask = models.ForeignKey(
@@ -289,13 +342,26 @@ class Task(models.Model):
         models.SET_NULL,
         blank=True,
         null=True,
-        related_name='parent_task',
+        related_name='subtasks',
         verbose_name=_("Parent task")
     )
-    resources = models.ManyToManyField(
+    owner = models.ForeignKey(
         Employee,
-        through='TaskResources',
-        through_fields=('task', 'employee'),
+        models.SET_NULL,
+        blank=True,
+        null=True,
+        # on_delete=models.CASCADE,
+        related_name='owned_tasks',
+        verbose_name=_("Task Owner")
+    )
+    assigned_to = models.ForeignKey(
+        Employee,
+        models.SET_NULL,
+        blank=True,
+        null=True,
+        # on_delete=models.CASCADE,
+        related_name='assigned_tasks',
+        verbose_name=_("Task assignee")
     )
     tags = models.ManyToManyField(
         Tag,
@@ -305,8 +371,8 @@ class Task(models.Model):
     # Attributes - Mandatory
     name = models.CharField(
         max_length=120,
-        verbose_name=_("name"),
-        help_text=_("Enter the project name")
+        verbose_name=_("Task Title"),
+        help_text=_("Enter the task title")
     )
     # Attributes - Optional
     completed = models.BooleanField(
@@ -317,6 +383,12 @@ class Task(models.Model):
         verbose_name=_("Priority"),
         default=1,
         help_text=_("Enter the priority of the task")
+    )
+    created_at = models.DateTimeField(
+        verbose_name=_("Created date"),
+        auto_now_add=True,
+        blank=True,
+        null=True
     )
     due_date = models.DateField(
         verbose_name=_("Due date"),
@@ -340,7 +412,14 @@ class Task(models.Model):
     # Custom Properties
     # Methods
 
+    def complete_task(self):
+        if self.completed:
+            self.completed_date = date.today
+        if self.completed_date:
+            self.completed = True
+        return self
     # Meta and String
+
     class Meta:
         verbose_name = _("Task")
         verbose_name_plural = _("Tasks")
@@ -351,17 +430,13 @@ class Task(models.Model):
         return self.name  # "%s - %s" % (self.user, self.name)
 
 
-class TaskResources(models.Model):
-    task = models.ForeignKey(Task,
-                             on_delete=models.CASCADE)
+class ProjectTeam(models.Model):
+    project = models.ForeignKey(Project,
+                                on_delete=models.CASCADE,
+                                related_name="project_team")
     employee = models.ForeignKey(Employee,
-                                 on_delete=models.CASCADE)
-    appointer = models.ForeignKey(
-        Employee,
-        on_delete=models.CASCADE,
-        related_name='supervisor_appoints'
-    )
-    appointment_reason = models.CharField(max_length=64)
+                                 on_delete=models.CASCADE,
+                                 related_name="avail_projects")
 
 
 class TaskTags(models.Model):
@@ -380,5 +455,7 @@ class TaskTags(models.Model):
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_employee_for_new_user(sender, created, instance, **kwargs):
     if created:
+        # employee = employee.create(user=instance)
         employee = Employee(user=instance)
+        employee.name = instance.username
         employee.save()
