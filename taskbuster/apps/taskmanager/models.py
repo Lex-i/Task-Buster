@@ -98,7 +98,7 @@ class Employee(models.Model):
         ordering = ("name",)
 
     def __str__(self):
-        return self.user.username
+        return self.name
 
 
 class Department(models.Model):
@@ -155,6 +155,7 @@ class Project(models.Model):
         Employee,
         through='ProjectTeam',
         through_fields=('project', 'employee'),
+        verbose_name=_("Project Team member")
     )
     # Attributes - Mandatory
     name = models.CharField(
@@ -203,13 +204,6 @@ class Project(models.Model):
         A = self.related_tasks.exclude(completed=True).count()
         return ((T - A) / T)
 
-    # Add project manager into project team when project is created
-
-    def save(self):
-        is_new = self._get_pk_val() is None
-        super(Project, self).save()
-        if is_new:
-            self.users.add(self.user)
     # Project is availiable for user
 
     def is_avail(self, employee):
@@ -436,7 +430,18 @@ class ProjectTeam(models.Model):
                                 related_name="project_team")
     employee = models.ForeignKey(Employee,
                                  on_delete=models.CASCADE,
-                                 related_name="avail_projects")
+                                 related_name="avail_projects",
+                                 verbose_name=_("Members"))
+
+    # The Object Manager is used to make queries
+    objects = managers.ProjectTeamManager()
+
+    # Meta and String
+
+    class Meta:
+        verbose_name = _("member")
+        verbose_name_plural = _("Project Team")
+        # ordering = ("employee", "name")
 
 
 class TaskTags(models.Model):
@@ -459,3 +464,14 @@ def create_employee_for_new_user(sender, created, instance, **kwargs):
         employee = Employee(user=instance)
         employee.name = instance.username
         employee.save()
+
+    # Add project manager into project team when project is created
+
+
+@receiver(post_save, sender=Project)
+def add_projectmanager_to_a_projectteam(sender, created, instance, **kwargs):
+    if created:
+        projectteam = ProjectTeam(project=instance)
+        # ProjectTeam.project=project.id
+        projectteam.employee = instance.user
+        projectteam.save()

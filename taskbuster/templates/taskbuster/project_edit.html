@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load l10n %} {# the localization template tags #}
+{% load tz %}
+{% block head_title %}
+  {% if add%}  
+  {% trans "New Project" %}
+  {% else %}
+  {% trans "Change Project" %}: {{project}}
+  {% endif%}
+{% endblock %}
+{% block title %}
+  {% if add%}
+    {% trans "New Project" %}
+  {% else %}
+    {{project}}
+  {% endif %}
+{% endblock %}
+
+
+{% block left %}
+{% endblock %}
+
+{% block content %}
+  <!-- Content -->
+    <div class="container">
+      <form class="needs-validation" novalidate="" method="POST" >
+        {% csrf_token %}
+        <div id="content-main">
+          <div class="row">
+            <div class="col-md-8 order-md-1">
+              {% if add%}
+                <h3>{% trans "New Project" %}</h3>
+              {%else%}
+                <h3>{% trans "Change Project" %}</h3>
+              {%endif%}              
+                <div class="row">
+                  <div class="col-md-4 mb-3">                  
+                      {{form.user}}                 
+                  </div>
+                  <div class="col-md-8 mb-3">                    
+                      {{form.name}}
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  {{form.description}}
+                </div>                
+                <div class="row">
+                  <div class="col-5 col-md-5 col-sm-5">
+                    {{form.softdeadline|localize}}
+                  </div>
+                  <div class="col-5 col-md-5 col-sm-5">
+                    {{form.harddeadline|localize}}
+                  </div>  
+                  <div class="col-2 col-md-2 col-sm-2">
+                    {{form.priority}}
+                  </div>
+                </div>             
+            </div>
+            <div class="col-md-4 order-md-2 mb-4">
+              <b>{% trans "Project team" %}:</b>                
+                </br>        
+                {% for member in project.users.all %}
+                  <span>{{member.name}}</span></br>
+                {% endfor %}
+                <span type="submit">{{form.users}}</span>
+                <a class="inline-deletelink" href="#">Remove</a type="submit">
+            <br />
+            </div>          
+          </div> {# row #}
+        </div> {# contant-main #}
+        </br>
+        <div class="submit-row">
+          <input value="Save" class="btn btn-primary" name="_save" type="submit" >
+          {# href="{% if add %}{% url projects_list %}{% else %}{% url project_details project.id %}{% endif %}" #}
+          
+          <input value="Save and add another" class="btn btn-secondary" name="_addanother" type="submit">
+          <input value="Save and continue editing" class="btn btn-secondary" name="_continue" type="submit">
+        </div>
+      </form>        
+        <!-- END Container -->
+    </div>
+
+{% endblock %}
+          

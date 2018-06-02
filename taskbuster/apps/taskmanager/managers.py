@@ -38,6 +38,10 @@ class CommentManager(models.Manager):
 
 class TaskManager(models.Manager):
     pass
+
+
+class ProjectTeamManager(models.Manager):
+    pass
     # All the tasks which are available for employee
     # def available_for(self, employee):
     #   if employee.user.is_superuser:

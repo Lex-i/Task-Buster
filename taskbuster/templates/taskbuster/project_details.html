@@ -13,51 +13,64 @@
       <!-- Example row of columns -->
       <div class="row">
         <div class="col-md-4">        
-            <b>{% trans "Project Manager" %}</b><br />
+            <h1>{{project.name}}</h1>
+            {% if project.description %}                
+                <span>{{project.description}}</span>
+                {% endif %}
+        </div>
+        <div class="col-md-4">        
+            <b>{% trans "Project Manager" %}</b>
             <span>{{project.user.name}}</span>
         </div>
         <div class="col-md-4">
-            <b>{% trans "Soft deadline"%}</b><br />
+            <b>{% trans "Soft deadline"%}</b>
             <span id="local-date">{{project.softdeadline}}</span>
         </div>
         <div class="col-md-4">
-            <b>{% trans "Hard deadline"%}</b><br />
+            <b>{% trans "Hard deadline"%}</b>
             <span id="local-date">{{project.harddeadline}}</span>
         </div>
-      </div>
-    </div>
-    
-    <div id="task-container" style="padding-bottom:0">
-        <h2 id="task-title">{{project.name}}</h2>
-        {% if project.description %}
-            <div id="task-info">
-                {{project.description}}
-            </div>
-            <div style="color:#000; padding: 5px 0">
-                <b>{% trans "Project team" %}</b> 
-                
-                    {% for member in project.users.all %}
-                        <p>{{member.pk}}</p>                        
-                        {% endfor %}
-                        
-                
-            </div>
+        <div class="col-md-4">
+            <b>{% trans "Project team" %}:</b>
+            <a href="{% url 'team_edit' project.id %}" class="changelink">{% trans "Change" %}</a>
+            </br>        
+            {% for member in project.users.all %}
+                <span>{{member.name}}</span></br>
+                {% endfor %}
+            <br />
+        </div>
+        <div class="col-md-4">
+            <b>{% trans "Project tasks"%}:</b>
+            </br>        
+            {% if project.related_tasks.all%}
+                {% for t in project.related_tasks.all %}                
+                        {% if t.completed%}
+                            <del>
+                                <a href="{% url 'task_details' t.id %}">
+                                    {{t.name}} &raquo; {{t.assigned_to.name}}</br>
+                                </a>
+                            </del>
+                        {% elif t.due_date < date.today %}                    
+                            <a href="{% url 'task_details' t.id %}" style="background-color:lightred;">
+                                {{t.name}} &raquo; {{t.assigned_to.name}}</br>
+                            </a>
+                        {% else %}
+                            <a href="{% url 'task_details' t.id %}">
+                                {{t.name}} &raquo; {{t.assigned_to.name}}</br>
+                            </a>
+                        {% endif %}
+                    {% endfor %}            
+            {%else%}
+                {% trans "No tasks"%} </br>
             {% endif %}
-
-        <div id="task-action">
-            <a href="{% url 'tasks_list' %}?project_id={{project.id}}&folder=all" class="bigger">
-                <i>{% trans "Project tasks"%}</i>
-            </a>
-            ({{project.tasks_count}}
-            {%if project.tasks_active_count%}
-                , 
-                <b>{{project.tasks_active_count}}</b>
-                {% endif %})
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="{% url 'add_task' %}" class="changelink">{% trans "Add a task" %}</a>
+        </div>
+        <div class="col-md-4">
+            <br />
             <a href="{% url 'projects_list' %}" class="bigger">
                 {% trans "Back to the project list"%}
             </a>
         </div>
+      </div>
     </div>
-
 {% endblock %}

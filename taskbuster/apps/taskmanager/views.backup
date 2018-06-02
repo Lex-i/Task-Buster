@@ -346,63 +346,26 @@ def project_details(request, project_id):
 @login_required
 def add_project(request):
     employees = Employee.objects.order_by('name')
-    f = ProjectForm()
-    # f = ProjectFormSet()
     if not request.user.is_superuser or request.user.employee.job_title != 'Project manager':
         return HttpResponseForbidden()
 
     if request.method == 'POST':
         f = ProjectForm(request.POST)
-        # f = ProjectFormSet(request.POST)
         if f.is_valid():
-            f.save(commit=True)
-            # prj.save()
-            # for member in prj:
-            #     projectteam = ProjectTeam(project=prj)
-            #     projectteam.employee = prj.users
-            #     projectteam.save()
-            # f.save_m2m()
-
-            return projects_list(request)
-        else:
-            print(f.errors)
-    # else:
-    #     f = ProjectForm(request.user)
-
-    return render(request, 'taskbuster/project_edit.html', {'form': f, 'add': True, 'employees': employees})
-
-# EDIT PROJECT TEAM
-# Access: project managers, admins
-
-
-@login_required
-def team_edit(request, project_id):
-    project = get_object_or_404(Project, pk=project_id)
-
-    if not request.user.is_superuser or request.user.employee.job_title != 'Project manager':
-        return HttpResponseForbidden()
-
-    f = TeamFormSet()
-
-    if request.method == 'POST':
-        f = TeamFormSet(request.POST, instance=project)
-        if f.is_valid():
-            if project:
-                f.save()
-                # team = f.save(commit=False)
-                # team.project = project
-                # team.save()
-                return HttpResponseRedirect(reverse('project_details', args=(project_id,)))
-        else:
-            f = TeamForm(f.errors)
+            prj = f.save(commit=False)
+            prj.user = request.user.employee
+            prj.save()
+            f.save_m2m()
+            return HttpResponseRedirect(reverse('projects_list'))
     else:
-        f = TeamFormSet(instance=project)
-    return render(request, 'taskbuster/team_edit.html',
-                  {'form': f, 'project': project})
+        f = ProjectForm(request.user)
+
+    return render(request, 'taskbuster/project_edit.html', {
+        'form': f, 'add': True, 'employees': employees})
 
 
 # EDIT PROJECT
-# Access: project managers, admins
+# Access: admins
 @login_required
 def edit_project(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
@@ -413,9 +376,9 @@ def edit_project(request, project_id):
     if request.method == 'POST':
         f = ProjectForm(request.POST, instance=project)
         if f.is_valid():
-            f.save(commit=True)
-            # p.save()
-            # f.save_m2m()
+            p = f.save(commit=False)
+            p.save()
+            f.save_m2m()
             return HttpResponseRedirect(reverse('project_details', args=(project_id,)))
     else:
         f = ProjectForm(instance=project)

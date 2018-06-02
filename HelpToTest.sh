@@ -27,6 +27,7 @@ psql -h localhost
 sudo -u postgres psql
 sudo -u postgres psql taskbuster_db
 
+# within Postgres enviroment:
 \q # exit this environment
 \? # for more help, 
 \list # to list your databases

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load l10n %} {# the localization template tags #}
+{% load tz %}
+{% block head_title %}
+  {% if add%}  
+  {% trans "New Project" %}
+  {% else %}
+  {% trans "Change Project" %}: {{project}}
+  {% endif%}
+{% endblock %}
+{% block title %}
+  {% if add%}
+    {% trans "New Project" %}
+  {% else %}
+    {{project}}
+  {% endif %}
+{% endblock %}
+
+
+{% block left %}
+{% endblock %}
+
+{% block content %}
+  <!-- Content -->
+    <div class="container">
+      <form class="needs-validation" novalidate="" method="post">        
+        <div id="content-main">
+          <div class="row">
+            <div class="col-md-8 order-md-1">
+              {% if add%}
+                <h3>{% trans "New Project" %}</h3>
+              {%else%}
+                <h3>{% trans "Change Project" %}</h3>
+              {%endif%}              
+                <div class="row">
+                  <div class="col-md-4 mb-3">                  
+                      <label for="id_user">{% trans "Project Manager:" %}</label>
+                      <div class="related-widget-wrapper">
+                        <select name="user" id="id_user" class="custom-select d-block w-100" requied="">
+                          <option value="" selected="selected">{% trans "Choose..."%}</option>
+                          {% for u in employees %}
+                            <option value="{{u.id}}">{{u.name}}</option>
+                            {% endfor %}
+                        </select>
+                      </div>                  
+                  </div>
+                  <div class="col-md-8 mb-3">                    
+                      <label class="required" for="id_name">{% trans "Project Title" %}:</label>
+                      <input name="name" value="{{ project.name }}" id="id_name" class="form-control" required="" type="text" placeholder="{% trans "Enter the project title" %}">
+                      {# <div class="invalid-feedback">{% trans "Enter the project title" %}</div> #}                  
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <div>
+                    <label for="id_description">{% trans "Description"%}:</label></br>
+                    <textarea name="description" id="id_description" class="form-control" rows="5" placeholder="{% trans "Enter description" %}">{{project.description}}</textarea>
+                    {# <div class="help">{% trans "Enter description" %}</div> #}
+                  </div>
+                </div>                
+                <div class="row">
+                  <div class="col-5 col-md-5 col-sm-5">
+                    <label class="required" for="id_softdeadline">
+                      {% trans "Soft deadline" %}:</label>
+                    <input name="softdeadline" value="{{project.softdeadline}}" required="" id="id_softdeadline" class="form-control" type="date">
+                    {# <input name="initial-softdeadline" value="{{project.softdeadline}}" id="initial-id_softdeadline" type="hidden"> #}
+
+                    {# <div class="invalid-feedback">{% trans "Enter the soft deadline" %}</div> #}
+                  </div>
+                  <div class="col-5 col-md-5 col-sm-5">
+                    <label class="required" for="id_harddeadline">{% trans "Soft deadline" %}:</label>
+                    <input name="harddeadline" value="{{project.harddeadline}}" required="" id="id_harddeadline" class="form-control" type="date">
+                    {# <input name="initial-harddeadline" value="{{project.harddeadline}}" id="initial-id_harddeadline" type="hidden"> #}
+                    {# <div class="invalid-feedback">{% trans "Enter the hard deadline" %}</div> #}
+                  </div>
+                  <div class="col-2 col-md-2 col-sm-2">
+                    <label class="required" for="id_priority">{% trans "Priority" %}:</label>
+                    <input name="priority" value="{{project.priority}}" id="id_priority" class="form-control" required="" min="0" type="number">
+                    {# <div class="help">{%trans "Enter the priority of the project"%}</div> #}
+                  </div>
+                </div>             
+            </div>
+            <div class="col-md-4 order-md-2 mb-4">
+              <h4 class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted">{% trans "Project Team"%}</span>                
+              </h4>              
+              <div>
+                <select multiple name="users" id="id_users" class="form-control" requied="">
+                    {% for u in employees %}
+                      <option value="{{u.id}}">{{u.name}}</option>
+                      {% endfor %}
+                </select>                      
+              </div>               
+            </div>          
+          </div> {# row #}
+        </div> {# contant-main #}
+        </br>
+        <div class="submit-row">
+          <input value="Save" class="btn btn-primary" name="_save" type="submit" href="{% if add %}{% url projects_list %}{% else %}{% url project_details project.id %}{% endif %}">
+          {% if not add%}
+            <p class="deletelink-box">
+              <a href="{% url 'delete_project' project.id %}" class="deletelink">Delete</a>
+            </p>
+          {% endif %}
+          <input value="Save and add another" class="btn btn-secondary" name="_addanother" type="submit">
+          <input value="Save and continue editing" class="btn btn-secondary" name="_continue" type="submit">
+        </div>
+      </form>
+        <!-- END Container -->
+    </div>
+
+{% endblock %}
+          

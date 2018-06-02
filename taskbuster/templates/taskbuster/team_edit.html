@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load l10n %} {# the localization template tags #}
+{% load tz %}
+{% block head_title %}
+  {% trans "Team of the Project" %}: {{project}}
+{% endblock %}
+{% block title %}
+  {% trans "Team of the Project" %}: {{project}}
+{% endblock %}
+
+
+{% block left %}
+{% endblock %}
+
+{% block content %}
+  <!-- Content -->
+    <div class="container">
+      <form class="needs-validation" novalidate="" method="POST" >
+        {% csrf_token %}
+        <div id="content-main">
+          <h1>{%trans "Team of" %} {{project.name}}:</h1>
+          {{form.management_form}}
+          {% for f in form%}
+          <div class="col-md-4">
+            {# <div class="col-md-4 order-md-2 mb-4"> #}
+              {{f}}
+            {# </div>             #}
+          </div>
+          {% endfor%}
+        </div> {# contant-main #}
+        </br>
+        <div class="submit-row">
+          <input value="Save" class="btn btn-primary" name="_save" type="submit" >
+        </div>
+      </form>
+        <!-- END Container -->
+    </div>
+
+{% endblock %}
+          

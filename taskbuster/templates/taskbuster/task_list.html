@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load l10n %} {# the localization template tags #}
+{% load tz %}
+{% block head_title %}Task of {{project}}{% endblock %}
+
+{% block left %}
+{% endblock %}
+
+{% block content %}
+
+    <h1 style="display: inline; padding-right: 15px">{% trans "Task list"%}</h1>
+    <br />
+    {% if user.is_superuser %}
+        <p><a class="btn btn-default" href="{% url 'add_task' %}" role="button" class="do">{% trans "Add task"%}</a></p>        
+        {% endif %}    
+
+    {% if project.tasks %}
+        {% for p in project.tasks %}
+            <a href="{% url 'task_details' p.id %}" style="font-size:130%; line-height: 175%">
+                {{p.name}}
+            </a>            
+            <br />
+            {% endfor %}
+        {% else %}
+            {% trans "There are no tasks"%}
+            <br />
+            {% blocktrans %}
+                Ask for somebody to add assign you any task.
+            {% endblocktrans %}
+        {% endif %}
+
+{% endblock %}
