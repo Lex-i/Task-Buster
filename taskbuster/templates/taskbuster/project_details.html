@@ -9,68 +9,116 @@
 {% endblock %}
 
 {% block content %}
-    <div class="container">
-      <!-- Example row of columns -->
-      <div class="row">
-        <div class="col-md-4">        
-            <h1>{{project.name}}</h1>
-            {% if project.description %}                
-                <span>{{project.description}}</span>
-                {% endif %}
+    <div class="container-fluid">
+      <div class="row justify-content-left">
+        <div class="col-sm-auto">
+          <div class="card" style="min-width: 20rem;">
+            <h3 class="card-header d-flex w-100 justify-content-between align-items-center" >
+                {{project.name}}
+                <a href="{% url 'projects_list' %}" class="btn btn-sm btn-outline-secondary">
+                    {% trans "Back to list"%}
+                </a>
+            </h3>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    {% if project.description %}                
+                        <p class="card-text">
+                            {{project.description}}
+                        </p>
+                    {% endif %}
+                </li>
+                <li class="list-group-item">
+                    <b>{% trans "Project Manager" %}</b>
+                    <span>{{project.user.name}}</span>
+                </li>
+                <li class="list-group-item">
+                   <b>{% trans "Soft deadline"%}</b>
+                    <span id="local-date">{{project.softdeadline}}</span> 
+                </li>
+                <li class="list-group-item">
+                    <b>{% trans "Hard deadline"%}</b>
+                    <span id="local-date">{{project.harddeadline}}</span>
+                </li>
+            </ul>
+          </div>
+          <div class="card" style="min-width: 20rem;">
+                <h5 class="card-header d-flex w-100 justify-content-between align-items-center">
+                    {% trans "Project team" %}
+                    {% if pm %}
+                    <a href="{% url 'team_edit' project.id %}" class="btn btn-sm btn-outline-secondary">
+                        {% trans "Change" %}
+                    </a>
+                    {% endif%}
+                </h5>
+                
+                <ul class="list-group list-group-flush">
+                    {% for member in project.users.all %}
+                        <li class="list-group-item">
+                            {{member.name}}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div> 
         </div>
-        <div class="col-md-4">        
-            <b>{% trans "Project Manager" %}</b>
-            <span>{{project.user.name}}</span>
-        </div>
-        <div class="col-md-4">
-            <b>{% trans "Soft deadline"%}</b>
-            <span id="local-date">{{project.softdeadline}}</span>
-        </div>
-        <div class="col-md-4">
-            <b>{% trans "Hard deadline"%}</b>
-            <span id="local-date">{{project.harddeadline}}</span>
-        </div>
-        <div class="col-md-4">
-            <b>{% trans "Project team" %}:</b>
-            <a href="{% url 'team_edit' project.id %}" class="changelink">{% trans "Change" %}</a>
-            </br>        
-            {% for member in project.users.all %}
-                <span>{{member.name}}</span></br>
-                {% endfor %}
-            <br />
-        </div>
-        <div class="col-md-4">
-            <b>{% trans "Project tasks"%}:</b>
-            </br>        
-            {% if project.related_tasks.all%}
-                {% for t in project.related_tasks.all %}                
-                        {% if t.completed%}
-                            <del>
-                                <a href="{% url 'task_details' t.id %}">
-                                    {{t.name}} &raquo; {{t.assigned_to.name}}</br>
-                                </a>
-                            </del>
-                        {% elif t.due_date < date.today %}                    
-                            <a href="{% url 'task_details' t.id %}" style="background-color:lightred;">
-                                {{t.name}} &raquo; {{t.assigned_to.name}}</br>
+        <div class="col col-lg-8 col-md-12 col-sm-12">
+ 
+                <h5 >
+                    {% trans "Project tasks"%}
+                    <a href="{% url 'add_task' project.id %}" class="btn btn-sm btn-outline-secondary">                        
+                        {% trans "Add a task" %}
+                    </a>
+                </h5>
+                <div class="list-group">
+                    {% if project.related_tasks.all%}
+                        {% for t in m %}                            
+                            {# output indents with &#8627; symbol to show the heirarchy #}
+                            {% if t.completed%} {# check statement and #}
+                                    <a class="list-group-item list-group-item-action flex-column align-items-start list-group-item-success" {%ifequal   t.owner user.employee %} href="{% url 'edit_task' t.id %}" {% else %} href="{% url 'task_details' t.id %}"
+                                    {% endifequal %}>            
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h5 >
+                                                {{t.name}}
+                                                <span class="badge">
+                                                    {{t.assigned_to.name}}
+                                                </span>
+                                            </h5>                                       
+                                            <small>{{t.due_date}}</small>
+                                        </div>
+                            {% elif t.is_over_due %}
+                                <a class="list-group-item list-group-item-action flex-column align-items-start list-group-item-danger" {%ifequal   t.owner user.employee %} href="{% url 'edit_task' t.id %}" {% else %} href="{% url 'task_details' t.id %}"
+                                {% endifequal %}>
+                                    <div class="d-flex w-100 justify-content-between" style="background-color:lightred;">
+                                        <h5 >
+                                                {{t.name}}
+                                                <span class="badge">
+                                                    {{t.assigned_to.name}}
+                                                </span>
+                                            </h5>                                       
+                                            <small>{{t.due_date}}</small>
+                                    </div>                                        
+                            {% else %}
+                                <a class="list-group-item list-group-item-action flex-column align-items-start list-group-item-warning" {%ifequal   t.owner user.employee %} href="{% url 'edit_task' t.id %}" {% else %} href="{% url 'task_details' t.id %}"
+                                {% endifequal %}>
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 >
+                                                {{t.name}}
+                                                <span class="badge">
+                                                    {{t.assigned_to.name}}
+                                                </span>
+                                            </h5>                                       
+                                            <small>{{t.due_date}}</small>
+                                    </div> 
+                                {% endif %}
                             </a>
-                        {% else %}
-                            <a href="{% url 'task_details' t.id %}">
-                                {{t.name}} &raquo; {{t.assigned_to.name}}</br>
-                            </a>
-                        {% endif %}
-                    {% endfor %}            
-            {%else%}
-                {% trans "No tasks"%} </br>
-            {% endif %}
-            <a href="{% url 'add_task' %}" class="changelink">{% trans "Add a task" %}</a>
+                            {% endfor %}
+                    {%else%}
+                        <a class="list-group-item list-group-item-action flex-column align-items-start">
+                            {% trans "No tasks"%}
+                        </a>
+                    {% endif %}
+                </div>
+
         </div>
-        <div class="col-md-4">
-            <br />
-            <a href="{% url 'projects_list' %}" class="bigger">
-                {% trans "Back to the project list"%}
-            </a>
-        </div>
-      </div>
+       </div>
     </div>
 {% endblock %}

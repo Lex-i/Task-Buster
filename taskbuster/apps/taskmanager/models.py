@@ -201,8 +201,11 @@ class Project(models.Model):
 
     def _get_progress_statement(self):
         T = self.related_tasks.count()
-        A = self.related_tasks.exclude(completed=True).count()
-        return ((T - A) / T)
+        if T > 0:
+            A = self.related_tasks.exclude(completed=True).count()
+            return ((T - A) // T)
+        else:
+            return 0
 
     # Project is availiable for user
 
@@ -210,7 +213,7 @@ class Project(models.Model):
         if employee.user.is_superuser:
             return True
         try:
-            employee.avail_projects.get(pk=self.pk)
+            employee.avail_projects.get(project=self.pk)
             return True
         except Project.DoesNotExist:
             return False
@@ -404,11 +407,17 @@ class Task(models.Model):
     # Object Manager
     objects = managers.TaskManager()
     # Custom Properties
+
+    def is_over_due(self):
+        if self.due_date < date.today() and not self.completed:
+            return True
+        else:
+            return False
     # Methods
 
     def complete_task(self):
         if self.completed:
-            self.completed_date = date.today
+            self.completed_date = date.today()
         if self.completed_date:
             self.completed = True
         return self
@@ -431,7 +440,8 @@ class ProjectTeam(models.Model):
     employee = models.ForeignKey(Employee,
                                  on_delete=models.CASCADE,
                                  related_name="avail_projects",
-                                 verbose_name=_("Members"))
+                                 # verbose_name=_("Members")
+                                 )
 
     # The Object Manager is used to make queries
     objects = managers.ProjectTeamManager()
@@ -465,7 +475,7 @@ def create_employee_for_new_user(sender, created, instance, **kwargs):
         employee.name = instance.username
         employee.save()
 
-    # Add project manager into project team when project is created
+# Add project manager into project team when project is created
 
 
 @receiver(post_save, sender=Project)
@@ -475,3 +485,13 @@ def add_projectmanager_to_a_projectteam(sender, created, instance, **kwargs):
         # ProjectTeam.project=project.id
         projectteam.employee = instance.user
         projectteam.save()
+
+# Save a user as an owner when he is adding a task
+
+
+# @receiver(post_save, sender=Task)
+# def create_owner_for_new_task(sender, created, instance, **kwargs):
+#     if created:
+#         task = Task(id=instance)
+#         task.owner = instance.user.employee
+#         task.save()

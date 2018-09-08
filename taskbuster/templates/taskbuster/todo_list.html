@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load i18n %}
+{% load l10n %} {# the localization template tags #}
+{% load tz %}
+{% block head_title %}
+    {% trans "To-Do list"%}
+{% endblock %}
+
+{% block left %}
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-0 pb-0 mb-0">
+            <h1 class="h2">
+                {% trans "To-Do list"%}
+            </h1>
+            <form method="get" id="prjform" class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-0 pb-0 mb-0">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                         <div class="input-group-text">
+                            <img src="{% static 'mGlass.png' %}" style="width:20px;height:20px;border:0">
+                        </div>
+                    </div>
+                    <input name="search_name" type="text" class="form-control" id="srcname" placeholder="{% trans 'Search' %}" {% if search_name %} value="{{search_name}}"{% endif %} onchange="document.getElementById('prjform').submit();">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="submit" name="search_name_off" value="True" onclick="document.getElementById('srcname').value = ''; document.getElementById('prjform').submit();">&#9932;</button>
+                    </div>
+                </div>
+                <select name="project_id" class="custom-select d-block w-100" onchange="document.getElementById('prjform').submit();" id="pid">
+                    <option value="0">
+                        {% trans "All projects"%}
+                    </option>
+                    {% for p in projects %}
+                        <option value="{{p.id}}" {% ifequal p.id project.id %} selected{% endifequal %}>
+                            {{p.name}}
+                        </option>
+                    {% endfor %}
+                </select>
+                <select name="owner_id" class="custom-select d-block w-100" onchange="document.getElementById('prjform').submit();" id="oid">
+                    <option value="0">
+                        {% trans "All owners" %}
+                    </option>
+                    {% for o in owners %}
+                        <option value="{{o.id}}" {% ifequal o.id owner.id %} selected{% endifequal %}>
+                            {{o.name}}
+                        </option>
+                    {% endfor %}
+                </select>
+                <button class="btn btn-secondary" name="filter_on" value="True" onclick="document.getElementById('srcname').value = ''; document.getElementById('pid').value("0").selected; document.getElementById('oid').value("0").selected; document.getElementById('prjform').submit();" href="{% url 'tasks_list' %}">{% trans "All"%}</button>
+            </form>
+        </div>
+        {% if tasks %}
+            {# Make a form to mark task as completed #}
+            <div class="list-group">
+                {% for t in tasks %}
+                    <a class="list-group-item list-group-item-action flex-column align-items-start {% if t.completed%} list-group-item-success {% elif t.is_over_due %} list-group-item-danger {% else %} list-group-item-warning {% endif %}" {%ifequal   t.owner user.employee %} href="{% url 'edit_task' t.id %}" {% else %} href="{% url 'task_details' t.id %}"
+                    {% endifequal %} >
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{t.name}}</h5>
+                            <small>{{t.due_date}}</small>
+                        </div>
+                        <p class="mb-1">{{t.description}}</p>
+                        <small>{{t.owner}}</small>                        
+                    </a>                                                          
+                {% endfor %}                
+            </div>            
+        {% else %}
+            {% trans "There are no tasks here"%}
+            <br />
+            {% blocktrans %}
+                Ask for somebody to add you to any project.
+            {% endblocktrans %}
+        {% endif %}
+    </div>
+{% endblock %}

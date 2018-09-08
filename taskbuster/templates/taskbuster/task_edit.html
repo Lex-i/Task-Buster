@@ -4,14 +4,14 @@
 {% load tz %}
 {% block head_title %}
   {% if add%}  
-  {% trans "New Project" %}
+  {% trans "New Task" %}
   {% else %}
-  {% trans "Change Project" %}: {{project}}
+  {% trans "Change Task" %}: {{task}}
   {% endif%}
 {% endblock %}
 {% block title %}
   {% if add%}
-    {% trans "New Project" %}
+    {% trans "New Task" %}
   {% else %}
     {{project}}
   {% endif %}
@@ -27,38 +27,36 @@
       <form class="needs-validation" novalidate="" method="POST" >
         {% csrf_token %}
         <div id="content-main">
-
               {% if add%}
-                <h3 class="mb-3">{% trans "New Project" %}</h3>
+                <h3 class="mb-3">{% trans "New Task" %}</h3>
               {%else%}
-                <h3 class="mb-3">{% trans "Change Project" %}</h3>
+                <h3 class="mb-3">{% trans "Change Task" %}</h3>
               {%endif%}              
                 <div class="row">
-                  <div class="col-md-4 mb-3 col-sm-4">                  
-                      {{form.user}}                 
+                  <div class="col-md-3 mb-3 col-sm-3">                  
+                      {# <input type="text" readonly class="form-control" value="{{ form.owner }}"> #}
+                      {{form.owner}}
                   </div>
-                  <div class="col-md-8 mb-3 col-sm-8">                    
+                  <div class="col-md-3 mb-3 col-sm-3">                    
+                      {{form.assigned_to}}
+                  </div>
+                  <div class="col-md-6 mb-3 col-sm-6">                    
                       {{form.name}}
                   </div>
                 </div>
-                <div class="row">
-                  <div class="col-md-8 mb-3 col-sm-8">
-                    {{form.description}}
-                  </div>
-                  <div class="col-md-4 mb-3 col-sm-4">
-                    {{form.users}}
-                  </div>   
-                </div>       
+                <div class="mb-3">
+                  {{form.description}}
+                </div>                
                 <div class="row">
                   <div class="col-5 col-md-5 col-sm-5">
-                    {{form.softdeadline|localize}}
-                  </div>
-                  <div class="col-5 col-md-5 col-sm-5">
-                    {{form.harddeadline|localize}}
-                  </div>  
+                    {{form.due_date|localize}}
+                  </div> 
                   <div class="col-2 col-md-2 col-sm-2">
                     {{form.priority}}
                   </div>
+                  <div class="col-5 col-md-5 col-sm-5">
+                    
+                  </div> 
                 </div>             
 
         </div> {# contant-main #}

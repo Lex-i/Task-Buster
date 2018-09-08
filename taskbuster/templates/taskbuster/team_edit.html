@@ -15,27 +15,27 @@
 
 {% block content %}
   <!-- Content -->
-    <div class="container">
-      <form class="needs-validation" novalidate="" method="POST" >
+    <div class="container-fluid">      
+      <form id="form1" method="POST" >      
         {% csrf_token %}
-        <div id="content-main">
-          <h1>{%trans "Team of" %} {{project.name}}:</h1>
-          {{form.management_form}}
-          {% for f in form%}
-          <div class="col-md-4">
-            {# <div class="col-md-4 order-md-2 mb-4"> #}
-              {{f}}
-            {# </div>             #}
-          </div>
-          {% endfor%}
-        </div> {# contant-main #}
-        </br>
-        <div class="submit-row">
-          <input value="Save" class="btn btn-primary" name="_save" type="submit" >
-        </div>
-      </form>
+          <h3>
+            {%trans "Team of" %} {{project.name}}:
+          </h3>
+            
+              {% for user in users %}
+                
+                    <div class="form-check">
+                      <label class="container1">{{ user.name }}
+                         <input type="checkbox" id="{{user.id}}" name="{{user.id}}" {% if user.id in team %} checked="checked" {%endif%} {% ifequal user.id pm.id %} disabled {% endifequal %}>
+                        <span class="checkmark"></span>
+                      </label>
+                    </div>
+            
+              {% endfor %}
+            
+          <input value="Save" class="btn btn-primary" name="_save" type="submit" onchange="document.getElementById('form1').submit();">
+        </form>
         <!-- END Container -->
     </div>
-
 {% endblock %}
           

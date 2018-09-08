@@ -21,7 +21,19 @@ class ProjectManager(models.Manager):
             return self.all().order_by('name')
         else:
                 # avail_projects = [i for i in self if employee.id == self.user]
-            return employee.user.projects.all().order_by('name')
+            return employee.projects.all().order_by('name')
+
+    def ProjectTasksHeirarchy(self, order):
+        m = []
+        for t in self.tasks.all().order_by(order):
+            m.append(t)
+            if t.parent_task in m:
+                for i in range(len(m) - 2, 0, -1):
+                    if t.parent_task == m[i - 1].id:
+                        break
+                    else:
+                        m[i], m[i + 1] = m[i + 1], m[i]
+        return m  # return the HDR or indent of each task in list
 
 
 class DepartmentManager(models.Manager):

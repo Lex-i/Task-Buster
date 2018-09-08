@@ -3,7 +3,7 @@
 # from django import forms
 from django.contrib.auth.models import User
 # from django.conf import settings
-from django.http import HttpResponseRedirect, Http404, HttpResponseForbidden
+from django.http import HttpResponseRedirect, Http404, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, get_list_or_404, render
 from django.urls import reverse
 from django.template import RequestContext, loader
@@ -11,7 +11,8 @@ from django.contrib.auth.decorators import login_required
 from taskmanager.models import *
 from taskmanager.forms import *
 from taskmanager.managers import *
-from django.utils import timezone
+# from django.utils import timezone
+from django.core.paginator import Paginator
 
 
 # Create your views here.
@@ -27,13 +28,18 @@ def index(request):
 def todo_list(request, state=0):
     order = direct = ''
     project = None
+    owner = None
+    search_name = None
     filter_on = False
+    search_name_off = True
+    user = request.user.employee
 
     # get projects and task, that user has access to
     projects = Project.objects.available_for(request.user.employee)
-    tasks = Task.objects.filter(project__in=projects)
+    tasks = Task.objects.filter(project__in=projects).filter(assigned_to__id=request.user.employee.id)
 
     # Users for filter
+    owners = Employee.objects.all().order_by('name')
     users = ProjectTeam.objects.filter(project__in=projects)
 
     # Save project_id in session, if it has been recieved via GET
@@ -46,23 +52,61 @@ def todo_list(request, state=0):
             project = get_object_or_404(Project, pk=project_id)
         request.session['project_id'] = project_id
 
+    # Save owner_id in session, if it has been recieved via GET
+    if request.GET.get('owner_id', False):
+        try:
+            owner_id = int(request.GET['owner_id'])
+        except owner_id:
+            raise Http404
+        if owner_id != 0:
+            owner = get_object_or_404(Employee, pk=owner_id)
+        request.session['owner_id'] = owner_id
+
+    if request.GET.get('search_name_off', False):
+        del request.session['search_name']
+
+    # Save search_name in session, if it has been recieved via GET
+    if request.GET.get('search_name', False):
+        try:
+            search_name = request.GET['search_name']
+        except search_name:
+            raise Http404
+        # if search_name != "":
+        #     search_name = get_object_or_404(Task, name__icontains=search_name)
+        request.session['search_name'] = search_name
+
     # Save a group of tasks (incoming, outcoming, everyone) and sorting, if they have been recieved via GET
+    '''
     if request.GET.get('folder', False):
         request.session['folder'] = request.GET['folder']
     if request.GET.get('order', False):
         request.session['order'] = request.GET['order']
     if request.GET.get('dir', False):
         request.session['dir'] = request.GET['dir']
+    '''
 
     # If the group of tasks or filter settings have been changed or deleted, then delete all existing
-    if request.GET.get('folder', False) or (request.GET.get('filter', False) in ('on', 'off')):
-        for key in ('owner', 'assigned_to', 'parenttask', 'search_name'):
+    if request.GET.get('filter_on', False):  # (request.GET.get('filter_on', False) in ('on', 'off')):
+        for key in ('owner_id', 'assigned_to', 'parenttask', 'search_name', 'project_id'):
             try:
                 del request.session[key]
             except KeyError:
                 pass
+        tasks = Task.objects.filter(project__in=projects).filter(assigned_to__id=request.user.employee.id)
+        project = None
+        owner = None
+        search_name = None
+        return HttpResponseRedirect(reverse('tasks_list'))
+
+    if request.GET.get('search_name_off', False):
+        try:
+            del request.session['search_name']
+            del request.session['search_name_off']
+        except KeyError:
+            pass
 
     # Save additional filter parameters in session
+    '''
     if request.GET.get('filter', False) == 'on':
         if request.GET.get('owner', False):
             request.session['owner'] = request.GET['owner']
@@ -70,26 +114,55 @@ def todo_list(request, state=0):
             request.session['assigned_to'] = request.GET['assigned_to']
         if request.GET.get('parenttask', False):
             request.session['parenttask'] = request.GET['parenttask']
-        if request.GET.get('search_title', False):
-            request.session['search_title'] = request.GET['search_name']
+        if request.GET.get('search_name', False):
+            request.session['search_name'] = request.GET['search_name']
+    '''
 
     params = request.session
 
-    # filter by project
-    if params.get('project_id', False):
-        if params['project_id'] != '0':
-            params['project_id'] = int(params['project_id'])
-            try:
-                project = Project.objects.get(pk=params['project_id'])
-                if not project.is_avail(request.user):
+    # delete filter
+    if params.get('filter_on', False):
+        project = None
+        owner = None
+        search_name = None
+        tasks = Task.objects.filter(project__in=projects).filter(assigned_to__id=request.user.employee.id)
+        return todo_list(request)
+    else:
+        # filter by project
+        if params.get('project_id', False):
+            if params['project_id'] != '0':
+                params['project_id'] = int(params['project_id'])
+                try:
+                    project = Project.objects.get(pk=params['project_id'])
+                    if not project.is_avail(request.user.employee):
+                        request.session['project_id'] = '0'
+                        return HttpResponseRedirect(reverse('tasks_list'))
+                    else:
+                        tasks = tasks.filter(project__id=params['project_id'])
+                except Project.DoesNotExist:
                     request.session['project_id'] = '0'
-                    return HttpResponseRedirect(reverse('tasks_list'))
-                else:
-                    tasks = tasks.filter(project__id=params['project_id'])
-            except Project.DoesNotExist:
-                request.session['project_id'] = '0'
+
+        # filter by owner
+        if params.get('owner_id', False):
+            if params['owner_id'] != '0':
+                params['owner_id'] = int(params['owner_id'])
+                try:
+                    owner = Employee.objects.get(pk=params['owner_id'])
+                    tasks = tasks.filter(owner__id=params['owner_id'])
+                except Owner.DoesNotExist:
+                    request.session['owner_id'] = '0'
+
+        # filter by Name
+        if params.get('search_name_off', False):
+            search_name = None
+            tasks = tasks.filter(name=any)
+        else:
+            if params.get('search_name', False):
+                search_name = params['search_name']
+                tasks = tasks.filter(name__icontains=params['search_name'])
 
     # filter by group
+    '''
     if params.get('folder', False):
         folder = params['folder']
         if not (folder == 'inbox' or folder == 'outbox' or folder == 'all'):
@@ -98,11 +171,12 @@ def todo_list(request, state=0):
         folder = 'inbox'
 
     if folder == 'inbox':
-        tasks = tasks.filter(assigned_to=request.user)
+        tasks = tasks.filter(assigned_to=request.user.employee)
     elif folder == 'outbox':
-        tasks = tasks.filter(owner=request.user)
+        tasks = tasks.filter(owner=request.user.employee)
 
     # additional filter
+
     if ((params.get('owner', False) and not folder == 'outbox') or
         (params.get('assigned_to', False) and not folder == 'inbox') or
             params.get('parenttask', False) or params.get('search_name', False)):
@@ -131,7 +205,7 @@ def todo_list(request, state=0):
         # Title
         if params.get('search_name', False):
             tasks = tasks.filter(name__icontains=params['search_name'])
-
+    '''
     # Sorting
     if params.get('order', False):
         order = params['order']
@@ -200,108 +274,114 @@ def todo_list(request, state=0):
                    'projects': projects,
                    'project': project,
                    'params': params,
-                   'folder': folder,
+                   # 'folder': folder,
                    'order': order,
                    'dir': direct,
                    'menu_active': 'tasks',
+                   # 'user': user,
                    'users': users,
-                   'states': states,
+                   'owners': owners,
+                   'owner': owner,
+                   'search_name': search_name,
+                   'search_name_off': search_name_off,
+                   # 'states': states,
                    'filter_on': filter_on
                    })
 
+
 # information about task
 # Access: project team, admins
-
-
 @login_required
 def details(request, task_id):
-    task = get_object_or_404(Task, pk=task_id)
-
-    if not task.project.is_avail(request.user):
-        return HttpResponseForbidden()
-
-    return render(request, 'taskbuster/task_details.html', {'task': task, 'menu_active': 'tasks'})
-
-# Task edition
-# Access: owner, admins
-
-
-@login_required
-def edit(request, task_id):
     task = get_object_or_404(Task, pk=task_id)
 
     if not task.project.is_avail(request.user.employee):
         return HttpResponseForbidden()
 
-    owner = get_object_or_None(User, id=task.owner_id)
-    if not (request.user.has_perm('taskbuster.change_task') or request.user == owner):
-        return HttpResponseForbidden()
+    return render(request, 'taskbuster/task_details.html', {'task': task, 'menu_active': 'tasks'})
+
+
+# Task edition
+# Access: owner, admins
+@login_required
+def edit(request, task_id):
+    # task = get_object_or_404(Task, pk=task_id)
+    task = Task.objects.get(pk=task_id)
+    project = task.project
+    p_id = task.project_id
+    print(task_id)
+    if not task.project.is_avail(request.user.employee):        
+        return HttpResponseForbidden()        
+
+    owner = task.owner
+    if not (request.user.employee == owner): # request.user.has_perm('taskbuster.change_task') or         
+        return HttpResponseForbidden()        
 
     if request.method == 'POST':
-        f = TaskForm(request.user, request.POST, instance=task)
+        f = TaskForm(request.user, project, request.POST, instance=task)
         if f.is_valid():
             t = f.save(commit=False)
-            if t.completed:
-                t.completed_date = timezone.now()
-
-            assigned_to_id = request.POST.get('assigned_to', '')
-            if assigned_to_id:
-                t.assigned_to = User.employee.objects.get(pk=assigned_to_id)
-            else:
-                t.assigned_to = None
+            t.owner = request.user.employee
+            t.project = project
             t.save()
-            return HttpResponseRedirect(reverse('task_details', args=(task_id,)))
+            return HttpResponseRedirect(reverse('project_details', args=(p_id,)))
     else:
-        f = TaskForm(request.user, instance=task)
+        f = TaskForm(request.user, project, instance=task)
 
-    projects = Project.objects.available_for(request.user.employee)
-    users = users_in_projects(projects)
+    # projects = Project.objects.available_for(request.user.employee)
+    # users = task.project.users.all().order_by('name')
 
-    return render(request, 'taskbuster/edit_task.html',
-                  {'form': f, 'task': task, 'users': users, 'menu_active': 'tasks'})
+    return render(request, 'taskbuster/task_edit.html',
+                  {'form': f, 'task': task, 'p':project, 'menu_active': 'tasks'})
+
 
 # Add a task
 # Access: project team, admins
-
-
 @login_required
-def add_task(request):
-    projects = Project.objects.available_for(request.user)
-    if not projects:
-        return {'no_available_projects': True, 'menu_active': 'tasks', 'add': True}
+def add_task(request, project_id):
+    project = get_object_or_404(Project, pk=project_id)
+    f = TaskForm(request.user.employee, project)
+    owner = request.user.employee
+    # projects = Project.objects.available_for(request.user)
+    # if not projects:
+    if request.user.employee not in project.users.all():
+        return render(request, 'taskbuster/task_edit.html',
+                      {'no_available_projects': True, 'menu_active': 'tasks', 'add': True})
 
     if request.method == 'POST':
-        f = TaskForm(request.user, request.POST)
+        f = TaskForm(request.user.employee, project, request.POST)
         if f.is_valid():
-            if not f.cleaned_data['project'].is_avail(request.user.employee):
-                return HttpResponseForbidden()
-
+            # if not f.cleaned_data['project'].is_avail(request.user.employee):
+            #     return HttpResponseForbidden()
+            # f.save(commit=True)
             t = f.save(commit=False)
             t.owner = request.user.employee
+            t.project = project
             t.save()
 
-            assigned_to_id = request.POST.get('assigned_to', '')
-            if assigned_to_id:
-                t.assigned_to = User.employee.objects.get(pk=assigned_to_id)
-                t.save()
-                t.mail_notify(request.get_host())
+            # assigned_to_id = request.POST.get('assigned_to', '')
+            # if assigned_to_id:
+            #     t.assigned_to = User.employee.objects.get(pk=assigned_to_id)
+            #     t.save()
+            #     t.mail_notify(request.get_host())
 
-            return HttpResponseRedirect(reverse('task_details', args=(t.id,)))
-    else:
-        init_data = {
-            'project': request.session.get('project_id', ''),
-        }
-        f = TaskForm(request.user.employee, initial=init_data)
+            # return HttpResponseRedirect(reverse('task_details', args=(t.id,)))
+            return HttpResponseRedirect(reverse('project_details', args=(project_id,)))
+        else:
+            print(f.errors)
+        # init_data = {
+        #     'project': request.session.get('project_id', ''),
+        # }
+        # f = TaskForm(request.user.employee, initial=init_data)
 
-    users = users_in_projects(projects)
+    # users = users_in_projects(projects)
 
-    return render(request, 'taskbuster/edit_task.html',
-                  {'form': f, 'add': True, 'users': users, 'menu_active': 'tasks'})
+    return render(request, 'taskbuster/task_edit.html',
+                  {'form': f, 'add': True, 'owner': owner, 'menu_active': 'tasks'})
+
 
 # Delete a task
 # Access: owner admins
-
-
 @login_required
 def delete(request, task_id):
     task = get_object_or_404(Task, pk=task_id)
@@ -327,18 +407,36 @@ def projects_list(request, state=0):
     projects = Project.objects.available_for(request.user.employee)
     return render(request, "taskbuster/projects_list.html", {'projects': projects, 'menu_active': 'projects'})
 
+
 # Project info
 # Accees: project team member; admins
-
-
 @login_required
 def project_details(request, project_id):
+    user = request.user.employee
     project = get_object_or_404(Project, pk=project_id)
+    tasks = project.related_tasks.all().order_by('due_date')
+    m = []
+    pm = False
+    if request.user.employee == project.user:
+        pm = True
+
+    for t in tasks:
+        if not t.parenttask:
+            m.append(t)
+            for st in t.subtasks.all().order_by('due_date'):
+                m.append(st)
+                m[len(m) - 1].name = ' ╚ ' + st.name
 
     if not project.is_avail(request.user.employee):
         return HttpResponseForbidden()
 
-    return render(request, "taskbuster/project_details.html", {'project': project, 'menu_active': 'projects'})
+    return render(request, "taskbuster/project_details.html", {
+        'project': project,
+        'tasks': tasks,
+        'm': m,
+        'pm': pm,
+        'menu_active': 'projects'
+    })
 
 
 # Add project
@@ -362,8 +460,25 @@ def add_project(request):
             #     projectteam.employee = prj.users
             #     projectteam.save()
             # f.save_m2m()
+            #             team = f.fields['users']
+            # f.fields['users'] = None
+            # prj = f.save(commit=False)
+            # prj.save()
+            # # f.save_m2m()
+            # # m2m_changed.connect(Project, sender=Project)
 
-            return projects_list(request)
+            # @receiver(post_save, sender=Project)
+            # def create_projectteam(sender, created, team, instance, **kwargs):
+            #     # global team
+            #     if created:
+            #         for m in team.queryset:
+            #             ProjectTeam.objects.create(employee=m, project=prj)
+            #         projectteam = ProjectTeam(project=instance)
+            #         # ProjectTeam.project=project.id
+            #         projectteam.employee = instance.user
+            #         projectteam.save()
+
+            return redirect('projects_list')  # projects_list(request)
         else:
             print(f.errors)
     # else:
@@ -371,34 +486,43 @@ def add_project(request):
 
     return render(request, 'taskbuster/project_edit.html', {'form': f, 'add': True, 'employees': employees})
 
+
 # EDIT PROJECT TEAM
 # Access: project managers, admins
-
-
 @login_required
 def team_edit(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
-
-    if not request.user.is_superuser or request.user.employee.job_title != 'Project manager':
+    
+    users = Employee.objects.all().order_by('name')
+    if not request.user.is_superuser and request.user.employee != project.user:
         return HttpResponseForbidden()
+    pm = project.user
+    team_id = []
+    oldteam = {}
 
-    f = TeamFormSet()
+    for user in users:        
+        try:
+            member = ProjectTeam.objects.get(employee=user.id, project=project)
+            team_id.append(user.id)
+            oldteam.update({user.id: 'on'})            
+        except ProjectTeam.DoesNotExist:
+            oldteam.update({user.id: 'off'})
 
     if request.method == 'POST':
-        f = TeamFormSet(request.POST, instance=project)
-        if f.is_valid():
-            if project:
-                f.save()
-                # team = f.save(commit=False)
-                # team.project = project
-                # team.save()
-                return HttpResponseRedirect(reverse('project_details', args=(project_id,)))
-        else:
-            f = TeamForm(f.errors)
-    else:
-        f = TeamFormSet(instance=project)
+        for user in users:
+            if user != project.user:
+                try:
+                    if request.POST[str(user.id)] == 'on' and oldteam[user.id] == 'off':
+                        a = ProjectTeam(employee=get_object_or_404(Employee, pk=user.id), project=project)
+                        a.save()
+                except:
+                    if oldteam[user.id] == 'on':
+                        ProjectTeam.objects.filter(employee=get_object_or_404(Employee, pk=user.id), project=project).delete()
+        return HttpResponseRedirect(reverse('project_details', args=(project_id,)))
+
+
     return render(request, 'taskbuster/team_edit.html',
-                  {'form': f, 'project': project})
+                  {'users': users, 'team': team_id, 'old_team':oldteam, 'project': project, 'pm': pm})
 
 
 # EDIT PROJECT
@@ -407,7 +531,7 @@ def team_edit(request, project_id):
 def edit_project(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
-    if not request.user.is_superuser or request.user.employee.job_title != 'Project manager':
+    if not request.user.is_superuser or request.user.employee != project.user:
         return HttpResponseForbidden()
 
     if request.method == 'POST':

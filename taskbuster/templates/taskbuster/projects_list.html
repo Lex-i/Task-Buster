@@ -1,33 +1,47 @@
 {% extends "base.html" %}
+{% load staticfiles %}
 {% load i18n %}
 {% load l10n %} {# the localization template tags #}
 {% load tz %}
-{% block head_title %}Projects{% endblock %}
+{% block head_title %}
+    {% trans "Projects" %}
+{% endblock %}
 
 {% block left %}
 {% endblock %}
 
 {% block content %}
-    <div class="container">
-        <h1 style="display: inline; padding-right: 15px">{% trans "Projects"%}</h1>
-        {% if user.is_superuser %}
-            <p><a class="btn btn-default" href="{% url 'add_project' %}" role="button" class="do">{% trans "Add project"%}</a></p>        
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-0 pb-0 mb-0">
+            <h1 class="h2">
+                {% trans "Projects"%}
+            </h1>
+            {% if user.is_superuser %}
+            <a type="submit" href="{% url 'add_project' %}" class="btn btn-sm btn-outline-secondary">
+                    {% trans "Add project"%}
+            </a>  
             {% endif %}
-        <br /><br />
+          </div>
 
-        {% if projects %}
-            {% for p in projects %}
-                <a href="{% url 'project_details' p.id %}" style="font-size:130%; line-height: 175%">
-                    {{p.name}} ({{p.tasks_count}})
-                </a>
-                <br />
-                {% endfor %}
-            {% else %}
-                {% trans "There are no projects"%}
-                <br />
-                {% blocktrans %}
-                    Ask for somebody to add you to any project.
-                {% endblocktrans %}
-            {% endif %}
+          {% if projects %}            
+            <div class="list-group">
+                {% for p in projects %}                        
+                    <a class="list-group-item list-group-item-action flex-column align-items-start" href="{% url 'project_details' p.id %}" >
+                    <div class="d-flex w-100 justify-content-between align-items-center">                        
+                        {{p.name}}                        
+                        <span class="badge badge-secondary">
+                            {{p.progress_statement}} %
+                        </span>
+                    </div>
+                    </a>                                                          
+                {% endfor %}                
+            </div>            
+        {% else %}
+            {% trans "There are no projects"%}
+            <br />
+            {% blocktrans %}
+                Ask for somebody to add you to any project.
+            {% endblocktrans %}
+        {% endif %}
     </div>
 {% endblock %}

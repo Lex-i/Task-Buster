@@ -109,3 +109,22 @@ class ProjectsAdmin(admin.ModelAdmin):
 
     def _comments(self, obj):
         return obj.related_comments.all().count()
+
+
+@admin.register(models.Task)
+class TasksAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "name",
+        "owner",
+        "priority",
+        "due_date",
+        "completed",
+        "assigned_to",
+        "project",
+        
+    )
+
+    search_fields = ["name"]
+
+    # inlines = [TasksInLine]
