@@ -27,48 +27,42 @@
       <form class="needs-validation" novalidate="" method="POST" >
         {% csrf_token %}
         <div id="content-main">
-
               {% if add%}
                 <h3 class="mb-3">{% trans "New Project" %}</h3>
               {%else%}
                 <h3 class="mb-3">{% trans "Change Project" %}</h3>
               {%endif%}              
                 <div class="row">
-                  <div class="col-md-4 mb-3 col-sm-4">                  
-                      {{form.user}}                 
-                  </div>
-                  <div class="col-md-8 mb-3 col-sm-8">                    
+                  <div class="col-sm-12  col-md-12  col-lg-12  col-xl-5 mb-1 tooltip-test" title="{% trans 'Project Title' %}">                    
                       {{form.name}}
                   </div>
-                </div>
-                <div class="row">
-                  <div class="col-md-8 mb-3 col-sm-8">
-                    {{form.description}}
+                  <div class="col-sm-4  col-md-4  col-lg-4  col-xl-2 mb-1 tooltip-test" title="{% trans 'Project Manager' %}">                  
+                      {{form.user}}                 
                   </div>
-                  <div class="col-md-4 mb-3 col-sm-4">
-                    {{form.users}}
-                  </div>   
-                </div>       
-                <div class="row">
-                  <div class="col-5 col-md-5 col-sm-5">
+                  <div class="col-sm-3  col-md-3  col-lg-3  col-xl-2 mb-1 tooltip-test" title="{% trans 'Soft deadline' %}">
                     {{form.softdeadline|localize}}
                   </div>
-                  <div class="col-5 col-md-5 col-sm-5">
+                  <div class="col-sm-3  col-md-3  col-lg-3  col-xl-2 mb-1 tooltip-test" title="{% trans 'Hard deadline' %}">
                     {{form.harddeadline|localize}}
                   </div>  
-                  <div class="col-2 col-md-2 col-sm-2">
+                  <div class="col-sm-2  col-md-2  col-lg-2  col-xl-1 mb-1 tooltip-test" title="{% trans 'Priority' %}">
                     {{form.priority}}
                   </div>
-                </div>             
-
+                </div>
+                <br>
+                <div class="row">
+                  <div class="col-12">
+                    {{form.description}}
+                  </div>  
+                </div>       
         </div> {# contant-main #}
         </br>
         <div class="submit-row">
-          <input value="Save" class="btn btn-primary" name="_save" type="submit" >
-          {# href="{% if add %}{% url projects_list %}{% else %}{% url project_details project.id %}{% endif %}" #}
-          
-          <input value="Save and add another" class="btn btn-secondary" name="_addanother" type="submit">
-          <input value="Save and continue editing" class="btn btn-secondary" name="_continue" type="submit">
+          {% if add%}
+          <input value="{% trans 'Save and add team members'%}" class="btn btn-secondary" name="_continue" type="submit">
+          {%else%}
+          <input value="{% trans 'Save'%}" class="btn btn-primary" name="_save" type="submit" >
+          {%endif%}
         </div>
       </form>        
         <!-- END Container -->

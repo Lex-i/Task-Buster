@@ -25,7 +25,7 @@
                     </div>
                     <input name="search_name" type="text" class="form-control" id="srcname" placeholder="{% trans 'Search' %}" {% if search_name %} value="{{search_name}}"{% endif %} onchange="document.getElementById('prjform').submit();">
                     <div class="input-group-append">
-                        <button class="btn btn-outline-secondary" type="submit" name="search_name_off" value="True" onclick="document.getElementById('srcname').value = ''; document.getElementById('prjform').submit();">&#9932;</button>
+                        <button class="btn btn-outline-secondary" type="submit" name="search_name_off" value="True" onclick="document.getElementById('srcname').value = ''; document.getElementById('prjform').submit();">&#10006;</button>
                     </div>
                 </div>
                 <select name="project_id" class="custom-select d-block w-100" onchange="document.getElementById('prjform').submit();" id="pid">

@@ -23,19 +23,40 @@
             {% endif %}
           </div>
 
-          {% if projects %}            
+          {% if projects %}
+          <form method="get" id="prjform">
             <div class="list-group">
-                {% for p in projects %}                        
-                    <a class="list-group-item list-group-item-action flex-column align-items-start" href="{% url 'project_details' p.id %}" >
-                    <div class="d-flex w-100 justify-content-between align-items-center">                        
-                        {{p.name}}                        
-                        <span class="badge badge-secondary">
-                            {{p.progress_statement}} %
-                        </span>
+                {% for p in projects %}
+                    <div class="list-group-item list-group-item-action flex-column align-items-start"  >
+                        <div class="row align-items-center">                                                    
+                            {%ifequal p.user user.employee %}
+                            <div role="button" class="col-sm-10  col-md-10  col-lg-11  col-xl-11 col-9  btn d-flex w-100 justify-content-between align-items-center tooltip-test" title="{% trans 'CLick to see project info' %}" onclick="$('#Modal{{p.id}}').modal('toggle')">
+                                {{p.name}}
+                                <span class="badge badge-secondary">
+                                    {{p.progress_statement}} %
+                                </span>
+                            </div> 
+                                <span>
+                                    <a role="button" class="btn btn-sm tooltip-test" title="{% trans 'Edit project' %}" href="{% url 'edit_project' p.id %}">
+                                        <span aria-hidden="true" style="color:black;">&#9998;</span>                                        
+                                    </a>
+                                    <a role="button" class="btn btn-sm tooltip-test" title="{% trans 'Delete project' %}" onclick="$('#Del{{p.id}}').modal('toggle')">
+                                        <span aria-hidden="true">&#10006;</span>
+                                    </a>
+                                </span>
+                            {%else%}
+                            <div role="button" class="btn d-flex w-100 justify-content-between align-items-center tooltip-test" title="{% trans 'CLick to see project info' %}" onclick="$('#Modal{{p.id}}').modal('toggle')">
+                                {{p.name}}
+                                <span class="badge badge-secondary">
+                                    {{p.progress_statement}} %
+                                </span>
+                            </div>
+                            {% endifequal %} 
+                        </div>
                     </div>
-                    </a>                                                          
-                {% endfor %}                
-            </div>            
+                {% endfor %}  
+            </div>
+            </form>  
         {% else %}
             {% trans "There are no projects"%}
             <br />
@@ -44,4 +65,87 @@
             {% endblocktrans %}
         {% endif %}
     </div>
+{% endblock %}
+
+        
+{% block modal%}
+<!-- Modal -->
+{% for project in projects %}
+<div class="modal fade" id="Modal{{project.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">{{project.name}}</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+      </div>
+        <div class="modal-body">
+            {% if project.description %}                
+                <p >
+                    {{project.description}}
+                </p>
+            {% endif %}
+            <p >
+                <b>{% trans "Project Manager" %}</b>
+                <span>{{project.user.name}}</span>
+            </p>
+            <p >
+               <b>{% trans "Soft deadline"%}</b>
+                <span id="local-date">{{project.softdeadline}}</span>
+            </p>
+            <p >
+                <b>{% trans "Hard deadline"%}</b>
+                <span id="local-date">{{project.harddeadline}}</span>
+            </p>
+            <p>
+                <b>{% trans "Team"%}</b>
+                {%ifequal   project.user user.employee %}                                
+                <a role="button"  href="{% url 'team_edit' project.id %}" class="btn btn-sm tooltip-test" title="Edit project team">
+                    &#9998;
+                </a>
+                {% endifequal %}
+            </p>
+            <ul class="list-group list-group-flush">
+            {% for member in project.users.all %}
+                <li class="list-group-item">
+                    {{member.name}}
+                </li>
+            {% endfor %}
+            </ul>
+      </div>
+      <div class="modal-footer">
+        {%ifequal   project.user user.employee %} 
+        <a role="button" href="{% url 'project_details' project.id %}" class="btn btn-primary" >{% trans "Edit Tasks"%}</a>
+        <a role="button" href="{% url 'edit_project' project.id %}" class="btn btn-warning" >{% trans "Edit Project"%}</a>
+        <a role="button" href="{% url 'delete_project' project.id %}" class="btn btn-danger" >{% trans "Delete"%}</a>
+        {% endifequal %} 
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "Close"%}</button>        
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal of delete confirmation -->
+<div class="modal fade" id="Del{{project.id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">{% trans "Confirmation"%}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>
+            {% trans "Are you sure you want to delete the project"%} <b>{{project.name}}</b>?
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'No' %}</button>        
+        <a role="button" href="{% url 'delete_project' project.id %}" class="btn btn-danger" >{% trans "Yes"%}</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
 {% endblock %}

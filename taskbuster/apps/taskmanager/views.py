@@ -11,11 +11,24 @@ from django.contrib.auth.decorators import login_required
 from taskmanager.models import *
 from taskmanager.forms import *
 from taskmanager.managers import *
+# from django.contrib.auth.forms import AuthenticationForm
 # from django.utils import timezone
 from django.core.paginator import Paginator
 
-
+'''
+# login view
+def home(request):
+    f = AuthenticationForm()
+    if request.method == 'POST':
+        f = AuthenticationForm(request.POST)
+        if f.is_valid():
+            f.save(commit=True)
+            return HttpResponseRedirect(reverse('tasks_list'))
+    return render(request, 'base.html', {'lform': f})
+'''
 # Create your views here.
+
+
 @login_required
 def index(request):
     return HttpResponseRedirect(reverse('tasks_list'))
@@ -32,11 +45,12 @@ def todo_list(request, state=0):
     search_name = None
     filter_on = False
     search_name_off = True
-    user = request.user.employee
+    # user = request.user.employee
 
     # get projects and task, that user has access to
     projects = Project.objects.available_for(request.user.employee)
-    tasks = Task.objects.filter(project__in=projects).filter(assigned_to__id=request.user.employee.id)
+    tasks = Task.objects.filter(project__in=projects).filter(
+        assigned_to__id=request.user.employee.id)
 
     # Users for filter
     owners = Employee.objects.all().order_by('name')
@@ -85,14 +99,17 @@ def todo_list(request, state=0):
         request.session['dir'] = request.GET['dir']
     '''
 
-    # If the group of tasks or filter settings have been changed or deleted, then delete all existing
-    if request.GET.get('filter_on', False):  # (request.GET.get('filter_on', False) in ('on', 'off')):
+    # If the group of tasks or filter settings have been changed or deleted,
+    # then delete all existing
+    # (request.GET.get('filter_on', False) in ('on', 'off')):
+    if request.GET.get('filter_on', False):
         for key in ('owner_id', 'assigned_to', 'parenttask', 'search_name', 'project_id'):
             try:
                 del request.session[key]
             except KeyError:
                 pass
-        tasks = Task.objects.filter(project__in=projects).filter(assigned_to__id=request.user.employee.id)
+        tasks = Task.objects.filter(project__in=projects).filter(
+            assigned_to__id=request.user.employee.id)
         project = None
         owner = None
         search_name = None
@@ -125,7 +142,8 @@ def todo_list(request, state=0):
         project = None
         owner = None
         search_name = None
-        tasks = Task.objects.filter(project__in=projects).filter(assigned_to__id=request.user.employee.id)
+        tasks = Task.objects.filter(project__in=projects).filter(
+            assigned_to__id=request.user.employee.id)
         return todo_list(request)
     else:
         # filter by project
@@ -243,9 +261,11 @@ def todo_list(request, state=0):
             tasks = tasks.order_by('name', '-created_at')
     elif order == 'completed_date':
         if direct == 'desc':
-            tasks = tasks.order_by('-completed', '-completed_date', '-created_at')
+            tasks = tasks.order_by(
+                '-completed', '-completed_date', '-created_at')
         else:
-            tasks = tasks.order_by('completed', 'completed_date', '-created_at')
+            tasks = tasks.order_by(
+                'completed', 'completed_date', '-created_at')
     elif order == 'assigned_to':
         if direct == 'desc':
             tasks = tasks.order_by('-assigned_to__name', '-created_at')
@@ -310,12 +330,12 @@ def edit(request, task_id):
     project = task.project
     p_id = task.project_id
     print(task_id)
-    if not task.project.is_avail(request.user.employee):        
-        return HttpResponseForbidden()        
+    if not task.project.is_avail(request.user.employee):
+        return HttpResponseForbidden()
 
     owner = task.owner
-    if not (request.user.employee == owner): # request.user.has_perm('taskbuster.change_task') or         
-        return HttpResponseForbidden()        
+    if not (request.user.employee == owner):  # request.user.has_perm('taskbuster.change_task') or
+        return HttpResponseForbidden()
 
     if request.method == 'POST':
         f = TaskForm(request.user, project, request.POST, instance=task)
@@ -332,7 +352,7 @@ def edit(request, task_id):
     # users = task.project.users.all().order_by('name')
 
     return render(request, 'taskbuster/task_edit.html',
-                  {'form': f, 'task': task, 'p':project, 'menu_active': 'tasks'})
+                  {'form': f, 'task': task, 'p': project, 'menu_active': 'tasks'})
 
 
 # Add a task
@@ -346,7 +366,8 @@ def add_task(request, project_id):
     # if not projects:
     if request.user.employee not in project.users.all():
         return render(request, 'taskbuster/task_edit.html',
-                      {'no_available_projects': True, 'menu_active': 'tasks', 'add': True})
+                      {'no_available_projects': True,
+                       'menu_active': 'tasks', 'add': True})
 
     if request.method == 'POST':
         f = TaskForm(request.user.employee, project, request.POST)
@@ -364,9 +385,8 @@ def add_task(request, project_id):
             #     t.assigned_to = User.employee.objects.get(pk=assigned_to_id)
             #     t.save()
             #     t.mail_notify(request.get_host())
-
-            # return HttpResponseRedirect(reverse('task_details', args=(t.id,)))
-            return HttpResponseRedirect(reverse('project_details', args=(project_id,)))
+            return HttpResponseRedirect(reverse(
+                'project_details', args=(project_id,)))
         else:
             print(f.errors)
         # init_data = {
@@ -404,8 +424,30 @@ def delete(request, task_id):
 # Access: project team member; admins
 @login_required  # @render_to('taskbuster/projects_list.html')
 def projects_list(request, state=0):
+    # project = None
     projects = Project.objects.available_for(request.user.employee)
-    return render(request, "taskbuster/projects_list.html", {'projects': projects, 'menu_active': 'projects'})
+    # # Save project_id in session, if it has been recieved via GET
+    # if request.GET.get('project_id', False):
+    #     try:
+    #         project_id = int(request.GET['project_id'])
+    #     except project_id:
+    #         raise Http404
+    #     if project_id != 0:
+    #         project = get_object_or_404(Project, pk=project_id)
+    #     request.session['project_id'] = project_id
+    # params = request.session
+    # # filter by project
+    # if params.get('project_id', False):
+    #     if params['project_id'] != '0':
+    #         params['project_id'] = int(params['project_id'])
+    #         try:
+    #             project = Project.objects.get(pk=params['project_id'])
+    #         except Project.DoesNotExist:
+    #             request.session['project_id'] = '0'
+    return render(request, "taskbuster/projects_list.html", {
+        'projects': projects,
+        # 'project': project,
+        'menu_active': 'projects'})
 
 
 # Project info
@@ -420,12 +462,12 @@ def project_details(request, project_id):
     if request.user.employee == project.user:
         pm = True
 
-    for t in tasks:
-        if not t.parenttask:
-            m.append(t)
-            for st in t.subtasks.all().order_by('due_date'):
-                m.append(st)
-                m[len(m) - 1].name = ' ╚ ' + st.name
+    # for t in tasks:
+    #     if not t.parenttask:
+    #         m.append(t)
+    #         for st in t.subtasks.all().order_by('due_date'):
+    #             m.append(st)
+    #             m[len(m) - 1].name = ' ╚ ' + st.name
 
     if not project.is_avail(request.user.employee):
         return HttpResponseForbidden()
@@ -446,8 +488,8 @@ def add_project(request):
     employees = Employee.objects.order_by('name')
     f = ProjectForm()
     # f = ProjectFormSet()
-    if not request.user.is_superuser or request.user.employee.job_title != 'Project manager':
-        return HttpResponseForbidden()
+    if not request.user.is_superuser and request.user.employee.job_title != 'Project manager':
+        return HttpResponseForbidden('You can not add a project')
 
     if request.method == 'POST':
         f = ProjectForm(request.POST)
@@ -478,7 +520,7 @@ def add_project(request):
             #         projectteam.employee = instance.user
             #         projectteam.save()
 
-            return redirect('projects_list')  # projects_list(request)
+            return HttpResponseRedirect(reverse('team_edit', args=(project_id,))) # projects_list(request)
         else:
             print(f.errors)
     # else:
@@ -492,7 +534,7 @@ def add_project(request):
 @login_required
 def team_edit(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
-    
+
     users = Employee.objects.all().order_by('name')
     if not request.user.is_superuser and request.user.employee != project.user:
         return HttpResponseForbidden()
@@ -500,11 +542,11 @@ def team_edit(request, project_id):
     team_id = []
     oldteam = {}
 
-    for user in users:        
+    for user in users:
         try:
             member = ProjectTeam.objects.get(employee=user.id, project=project)
             team_id.append(user.id)
-            oldteam.update({user.id: 'on'})            
+            oldteam.update({user.id: 'on'})
         except ProjectTeam.DoesNotExist:
             oldteam.update({user.id: 'off'})
 
@@ -513,16 +555,17 @@ def team_edit(request, project_id):
             if user != project.user:
                 try:
                     if request.POST[str(user.id)] == 'on' and oldteam[user.id] == 'off':
-                        a = ProjectTeam(employee=get_object_or_404(Employee, pk=user.id), project=project)
+                        a = ProjectTeam(employee=get_object_or_404(
+                            Employee, pk=user.id), project=project)
                         a.save()
                 except:
                     if oldteam[user.id] == 'on':
-                        ProjectTeam.objects.filter(employee=get_object_or_404(Employee, pk=user.id), project=project).delete()
+                        ProjectTeam.objects.filter(employee=get_object_or_404(
+                            Employee, pk=user.id), project=project).delete()
         return HttpResponseRedirect(reverse('project_details', args=(project_id,)))
 
-
     return render(request, 'taskbuster/team_edit.html',
-                  {'users': users, 'team': team_id, 'old_team':oldteam, 'project': project, 'pm': pm})
+                  {'users': users, 'team': team_id, 'old_team': oldteam, 'project': project, 'pm': pm})
 
 
 # EDIT PROJECT
@@ -531,7 +574,7 @@ def team_edit(request, project_id):
 def edit_project(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
-    if not request.user.is_superuser or request.user.employee != project.user:
+    if not request.user.is_superuser and request.user.employee != project.user:
         return HttpResponseForbidden()
 
     if request.method == 'POST':
@@ -540,7 +583,8 @@ def edit_project(request, project_id):
             f.save(commit=True)
             # p.save()
             # f.save_m2m()
-            return HttpResponseRedirect(reverse('project_details', args=(project_id,)))
+            return HttpResponseRedirect(reverse(
+                'project_details', args=(project_id,)))
     else:
         f = ProjectForm(instance=project)
 
@@ -558,9 +602,8 @@ def delete_project(request, project_id):
     if not project.is_avail(request.user.employee):
         return HttpResponseForbidden()
 
-    author = get_object_or_None(User, id=project.owner_id)
-    if not (request.user.employee.has_perm('taskbuster.delete_project') or request.user.employee == author):
-        return HttpResponseForbidden()
+    if not (request.user.employee == project.user):
+        return HttpResponseForbidden("You are not the project's manager")
 
     if project.tasks_count > 0:
         return render(request, 'taskbuster/project_delete_cannot.html',
@@ -652,7 +695,8 @@ def add_comment(request, project_id):
             return HttpResponseForbidden()
 
         text = request.POST.get('message', '')
-        comment = Comment(author=request.user.employee, project=project, text=text)
+        comment = Comment(author=request.user.employee,
+                          project=project, text=text)
         if request.POST.get('reply_to', False):
             try:
                 reply_to_id = int(request.POST['reply_to'])
@@ -682,7 +726,8 @@ def edit_comment(request, comment_id):
     if not (request.user.employee.has_perm('taskbuster.edit_comment') or request.user.employee == author):
         return HttpResponseForbidden()
     if request.POST.get('message', ''):
-        comment = Comment(author=request.user.employee, project=project, text=text)
+        comment = Comment(author=request.user.employee,
+                          project=project, text=text)
         comment.save
     else:
         comment.delete()

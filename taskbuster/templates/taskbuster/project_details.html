@@ -9,15 +9,12 @@
 {% endblock %}
 
 {% block content %}
-    <div class="container-fluid">
-      <div class="row justify-content-left">
+<div class="container-fluid">
+    <div class="row justify-content-left">
         <div class="col-sm-auto">
-          <div class="card" style="min-width: 20rem;">
-            <h3 class="card-header d-flex w-100 justify-content-between align-items-center" >
+          
+            <h3 class="d-flex w-100 justify-content-between align-items-center">
                 {{project.name}}
-                <a href="{% url 'projects_list' %}" class="btn btn-sm btn-outline-secondary">
-                    {% trans "Back to list"%}
-                </a>
             </h3>
             <ul class="list-group list-group-flush">
                 <li class="list-group-item">
@@ -40,9 +37,8 @@
                     <span id="local-date">{{project.harddeadline}}</span>
                 </li>
             </ul>
-          </div>
-          <div class="card" style="min-width: 20rem;">
-                <h5 class="card-header d-flex w-100 justify-content-between align-items-center">
+          <hr>          
+                <h5 class="d-flex w-100 justify-content-between align-items-center">
                     {% trans "Project team" %}
                     {% if pm %}
                     <a href="{% url 'team_edit' project.id %}" class="btn btn-sm btn-outline-secondary">
@@ -58,10 +54,9 @@
                         </li>
                     {% endfor %}
                 </ul>
-            </div> 
+            <hr>           
         </div>
-        <div class="col col-lg-8 col-md-12 col-sm-12">
- 
+        <div class="col col-lg-6 col-md-12 col-sm-12"> 
                 <h5 >
                     {% trans "Project tasks"%}
                     <a href="{% url 'add_task' project.id %}" class="btn btn-sm btn-outline-secondary">                        
@@ -117,8 +112,22 @@
                         </a>
                     {% endif %}
                 </div>
-
+            {%ifequal   project.manager user.employee %} 
+                <button type="button" class="btn btn-warning" href="{% url 'edit_project' project.id %}">{% trans "Edit the project"%}</button>
+            {% endifequal %} 
         </div>
-       </div>
     </div>
+       {# Comments #}
+    <div class="col col-lg-6 col-md-12 col-sm-12">
+        <h5>{% trans "Comments"%}</h5>
+        <form id="Comment" method="POST" >      
+        {% csrf_token %} 
+            <div class="form-check">
+                {{ comment.text }}
+            </div>                
+          <input value="Save" class="btn btn-primary" name="_save" type="submit" onchange="document.getElementById('Comment').submit();">
+        </form>
+        {# List of commetns #}
+    </div>
+</div>
 {% endblock %}
